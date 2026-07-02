@@ -1321,9 +1321,19 @@ export default function Home() {
 
     const renewalCount = insuranceRenewals.filter(r => r.daysLeft <= 90 && r.daysLeft >= 0).length;
 
-    // 주차 표시 텍스트
-    const weekNum = Math.ceil(weekStart.getDate() / 7);
-    const weekLabel = `${weekStart.getFullYear()}년 ${weekStart.getMonth() + 1}월 ${weekNum}주차 (${String(weekStart.getMonth() + 1).padStart(2, '0')}.${String(weekStart.getDate()).padStart(2, '0')} ~ ${String(weekEnd.getMonth() + 1).padStart(2, '0')}.${String(weekEnd.getDate()).padStart(2, '0')})`;
+    // 주차 표시 텍스트 (ISO 8601 기준 목요일 기준 계산)
+    const thursday = new Date(weekStart);
+    thursday.setDate(weekStart.getDate() + 3);
+    
+    const displayYear = thursday.getFullYear();
+    const displayMonth = thursday.getMonth() + 1;
+    
+    const firstDayOfMonth = new Date(displayYear, displayMonth - 1, 1);
+    const firstThursdayOffset = (11 - firstDayOfMonth.getDay()) % 7;
+    const firstThursday = new Date(displayYear, displayMonth - 1, 1 + firstThursdayOffset);
+    
+    const weekNum = Math.ceil(((thursday - firstThursday) / 86400000) / 7) + 1;
+    const weekLabel = `${displayYear}년 ${displayMonth}월 ${weekNum}주차 (${String(weekStart.getMonth() + 1).padStart(2, '0')}.${String(weekStart.getDate()).padStart(2, '0')} ~ ${String(weekEnd.getMonth() + 1).padStart(2, '0')}.${String(weekEnd.getDate()).padStart(2, '0')})`;
 
     return { weekLabel, ws, we, newThisWeek, inProgress, completedThisWeek, alertRows, needsAttention, insuranceRenewals, renewalCount };
   }, [rows, insRows, weekOffset]);
