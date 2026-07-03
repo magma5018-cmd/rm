@@ -38,7 +38,7 @@ const emptyRow = () => {
     사고내용: '', '대표이사 보고사항': '', '대표이사 보고일': '', 사고액: '', 배상액: '', 회수액: '',
     손실액: '', 완료보고: '미완료', 완료방법: '',
     보험접수: 'N', 접수일: today, 보험사: '', 접수보험: '',
-    사건번호: '', 증권번호: '', 보험보상여부: '', 보험보상유형: '', 보험금: '',
+    사건번호: '', 증권번호: '', 자기부담금: '', 보험보상여부: '', 보험보상유형: '', 보험금: '',
     fileCount: 0,   // 업로드된 파일 수
     driveUrl: null, // 구글드라이브 폴더 URL (연동 후 채워짐)
     진행경과: [],
@@ -67,7 +67,7 @@ const INIT_ROWS = [
     사고내용: '지게차 충돌', '대표이사 보고사항': 'O', '대표이사 보고일': '2026-05-08', 사고액: '2,500,000', 배상액: '1,000,000', 회수액: '0',
     손실액: '1,500,000', 완료보고: '미완료', 완료: false,
     보험접수: 'Y', 접수일: '2026-05-08', 보험사: '삼성화재', 접수보험: 'MMIP',
-    사건번호: 'C-12345', 증권번호: 'P-99999', 보험보상여부: '보상대상', 보험보상유형: '물적피해', 보험금: '1,500,000',
+    사건번호: 'C-12345', 증권번호: 'P-99999', 자기부담금: '0', 보험보상여부: '보상대상', 보험보상유형: '물적피해', 보험금: '1,500,000',
     fileCount: 2,
     driveUrl: 'https://drive.google.com',
     진행경과: [
@@ -578,7 +578,7 @@ export default function Home() {
     '손실액': 90, '완료보고': 80, '완료방법': 120,
     // 보험 접수
     '보험접수': 80, '접수일': 110, '보험사': 90, '접수보험': 90,
-    '사건번호': 100, '증권번호': 100,
+    '사건번호': 100, '증권번호': 100, '자기부담금': 100,
     '보험보상여부': 90, '보험보상유형': 90, '보험금': 100,
     // 처리경과 / 첨부파일
     '처리경과': 220, '체크행': 40, '첨부파일': 120,
@@ -689,8 +689,22 @@ export default function Home() {
 
   // ── 사고 셀 수정 ──
   const updateCell = useCallback((id, field, value) => {
-    setRows(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
-    // 이미 dirty 상태면 동일 참조 반환 → dirtyRows 변경으로 인한 추가 리렌더 방지
+    setRows(prev => prev.map(r => {
+      if (r.id === id) {
+        const updated = { ...r, [field]: value };
+        // 금액 관련 필드가 수정되면 손실액 자동 계산 (손실액 = 사고액 - 배상액 - 회수액 - 보험금)
+        if (['사고액', '배상액', '회수액', '보험금'].includes(field)) {
+          const occur = parseAmount(updated['사고액']);
+          const comp = parseAmount(updated['배상액']);
+          const recov = parseAmount(updated['회수액']);
+          const insPay = parseAmount(updated['보험금']);
+          const calcLoss = occur - comp - recov - insPay;
+          updated['손실액'] = calcLoss > 0 ? calcLoss.toLocaleString() : '0';
+        }
+        return updated;
+      }
+      return r;
+    }));
     setDirtyRows(prev => prev.has(id) ? prev : new Set([...prev, id]));
   }, []);
 
@@ -1035,10 +1049,10 @@ export default function Home() {
     '대표이사 보고사항', '대표이사 보고일',
     '사고금액(텍스트)', '사고액', '배상액', '회수액', '손실액'
   ];
-  const COLS_INSURANCE = ['보험접수', '접수일', '보험사', '접수보험', '사건번호', '증권번호', '보험보상여부', '보험보상유형', '보험금'];
+  const COLS_INSURANCE = ['보험접수', '접수일', '보험사', '접수보험', '사건번호', '증권번호', '자기부담금', '보험보상여부', '보험보상유형', '보험금'];
   const DATE_FIELDS = new Set(['사고일', '사고접수일', '가이드제공일', '대표이사 보고일', '접수일', '보험 시작일', '보험 종료일', '완료보고일']);
   const LONG_TEXT = new Set(['사고내용', '보상내용', '비고', '사고명', '피보험자', '사고금액(텍스트)', '처리경과', '완료방법']);
-  const NUM_FIELDS = new Set(['사고액', '배상액', '회수액', '손실액', '보험금']);
+  const NUM_FIELDS = new Set(['사고액', '배상액', '회수액', '손실액', '보험금', '자기부담금']);
   const INS_COLS = [
     { key: '구분', w: 80 }, { key: '보험명', w: 150 }, { key: '성격', w: 80 },
     { key: '보상내용', w: 240 }, { key: '계약자', w: 120 }, { key: '피보험자', w: 220 },
@@ -2097,6 +2111,7 @@ export default function Home() {
                       { label: '접수보험', value: drillDetail.접수보험 },
                       { label: '사건번호', value: drillDetail.사건번호 },
                       { label: '증권번호', value: drillDetail.증권번호 },
+                      { label: '자기부담금', value: drillDetail.자기부담금 ? `₩${parseAmount(drillDetail.자기부담금).toLocaleString()}` : null },
                       { label: '보상여부', value: drillDetail.보험보상여부 },
                       { label: '보상유형', value: drillDetail.보험보상유형 },
                       { label: '보험금', value: drillDetail.보험금 ? `₩${parseAmount(drillDetail.보험금).toLocaleString()}` : null },
