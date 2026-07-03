@@ -707,7 +707,7 @@ export default function Home() {
           const recov = parseAmount(updated['회수액']);
           const insPay = parseAmount(updated['보험금']);
           const calcLoss = occur - comp - recov - insPay;
-          updated['손실액'] = calcLoss > 0 ? calcLoss.toLocaleString() : '0';
+          updated['손실액'] = calcLoss.toLocaleString();
         }
         return updated;
       }
