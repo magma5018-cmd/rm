@@ -94,6 +94,7 @@ export async function GET() {
         접수보험:     getAccVal(row, '접수보험'),
         사건번호:     getAccVal(row, '사건번호'),
         증권번호:     getAccVal(row, '증권번호'),
+        자기부담금:   getAccVal(row, '자기부담금'),
         보험보상여부: getAccVal(row, '보험보상여부'),
         보험보상유형: getAccVal(row, '보험보상유형'),
         보험금:       getAccVal(row, '보험금'),
@@ -200,7 +201,7 @@ export async function POST(request) {
       '사고금액(텍스트)', '사고액', '배상액', '회수액', '손실액',
       '완료보고', '완료보고일', '완료방법',
       '보험접수', '접수일', '보험사', '접수보험',
-      '사건번호', '증권번호', '보험보상여부', '보험보상유형', '보험금',
+      '사건번호', '증권번호', '자기부담금', '보험보상여부', '보험보상유형', '보험금',
       '파일수', '드라이브URL'
     ];
 
@@ -218,7 +219,7 @@ export async function POST(request) {
       r['사고금액(텍스트)'], r.사고액, r.배상액, r.회수액, r.손실액,
       r.완료보고, r['완료보고일'] || '', r.완료방법,
       r.보험접수, r.접수일, r.보험사, r.접수보험,
-      r.사건번호, r.증권번호, r.보험보상여부, r.보험보상유형, r.보험금,
+      r.사건번호, r.증권번호, r.자기부담금 || '', r.보험보상여부, r.보험보상유형, r.보험금,
       r.fileCount, r.driveUrl
     ]);
 
@@ -232,7 +233,7 @@ export async function POST(request) {
     // 시트 초기화 (기존 데이터가 남아있는 현상 방지)
     await sheets.spreadsheets.values.clear({
       spreadsheetId: sheetId,
-      range: `${ACCIDENT_SHEET}!A2:AI1000`,
+      range: `${ACCIDENT_SHEET}!A2:AJ1000`,
     });
     await sheets.spreadsheets.values.clear({
       spreadsheetId: sheetId,
@@ -245,8 +246,8 @@ export async function POST(request) {
       requestBody: {
         valueInputOption: 'USER_ENTERED',
         data: [
-          { range: `${ACCIDENT_SHEET}!A1:AI1`, values: [accidentHeaders] },
-          { range: `${ACCIDENT_SHEET}!A2:AI${accidentValues.length + 1}`, values: accidentValues },
+          { range: `${ACCIDENT_SHEET}!A1:AJ1`, values: [accidentHeaders] },
+          { range: `${ACCIDENT_SHEET}!A2:AJ${accidentValues.length + 1}`, values: accidentValues },
           { range: `${INSURANCE_SHEET}!A1:Q1`, values: [insuranceHeaders] },
           { range: `${INSURANCE_SHEET}!A2:Q${insuranceValues.length + 1}`, values: insuranceValues },
         ],
