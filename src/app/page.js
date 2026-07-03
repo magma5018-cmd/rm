@@ -700,13 +700,13 @@ export default function Home() {
     setRows(prev => prev.map(r => {
       if (r.id === id) {
         const updated = { ...r, [field]: value };
-        // 금액 관련 필드가 수정되면 손실액 자동 계산 (손실액 = 사고액 - 배상액 - 회수액 - 보험금)
-        if (['사고액', '배상액', '회수액', '보험금'].includes(field)) {
+        // 금액 관련 필드가 수정되면 손실액 자동 계산 (손실액 = 사고액 - 배상액 - 회수액 - 자기부담금)
+        if (['사고액', '배상액', '회수액', '자기부담금'].includes(field)) {
           const occur = parseAmount(updated['사고액']);
           const comp = parseAmount(updated['배상액']);
           const recov = parseAmount(updated['회수액']);
-          const insPay = parseAmount(updated['보험금']);
-          const calcLoss = occur - comp - recov - insPay;
+          const deduct = parseAmount(updated['자기부담금']);
+          const calcLoss = occur - comp - recov - deduct;
           updated['손실액'] = calcLoss.toLocaleString();
         }
         return updated;
