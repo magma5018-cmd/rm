@@ -34,7 +34,7 @@ const COLUMN_TOOLTIPS = {
   '배상액': '보험사 또는 귀책처로부터 구상하여 돌려받을 금액',
   '회수액': '파손 화물 처분 등을 통해 자체적으로 회수한 금액',
   '자기부담금': '보험 처리 시 당사가 부담해야 하는 공제 금액',
-  '손실액': '당사가 최종 부담하는 순 손실액 (사고액 - 배상액 - 회수액 - 보험금)'
+  '손실액': '당사가 최종 부담하는 순 손실액 (사고액 - 배상액 - 회수액 + 자기부담금)'
 };
 
 const emptyRow = () => {
@@ -706,7 +706,7 @@ export default function Home() {
           const comp = parseAmount(updated['배상액']);
           const recov = parseAmount(updated['회수액']);
           const deduct = parseAmount(updated['자기부담금']);
-          const calcLoss = occur - comp - recov - deduct;
+          const calcLoss = occur - comp - recov + deduct;
           updated['손실액'] = calcLoss.toLocaleString();
         }
         return updated;
