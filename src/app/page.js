@@ -29,6 +29,14 @@ const fmtAxisVal = (v) => {
 };
 
 // ── 빈 사고 행 템플릿 ──
+const COLUMN_TOOLTIPS = {
+  '사고액': '사고로 인해 발생한 총 피해 규모 (원가 기준 총액)',
+  '배상액': '보험사 또는 귀책처로부터 구상하여 돌려받을 금액',
+  '회수액': '파손 화물 처분 등을 통해 자체적으로 회수한 금액',
+  '자기부담금': '보험 처리 시 당사가 부담해야 하는 공제 금액',
+  '손실액': '당사가 최종 부담하는 순 손실액 (사고액 - 배상액 - 회수액 - 보험금)'
+};
+
 const emptyRow = () => {
   const today = new Date().toISOString().split('T')[0];
   return {
@@ -2327,6 +2335,7 @@ export default function Home() {
                           <th key={c} className="detail-accident"
                             style={{ ...thStyle(c), cursor: sortable ? 'pointer' : 'default', background: active ? '#eff6ff' : thStyle(c).background, userSelect: 'none' }}
                             onClick={() => sortable && handleSort(c)}
+                            title={COLUMN_TOOLTIPS[c] || ''}
                           >
                             {NUM_FIELDS.has(c)
                               ? <>{c}{sortMark(c)}<br /><span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>(단위:원)</span></>
@@ -2345,6 +2354,7 @@ export default function Home() {
                           <th key={c} className="detail-accident"
                             style={{ ...thStyle(c), cursor: sortable ? 'pointer' : 'default', background: active ? '#eff6ff' : thStyle(c).background, userSelect: 'none' }}
                             onClick={() => sortable && handleSort(c)}
+                            title={COLUMN_TOOLTIPS[c] || ''}
                           >
                             {NUM_FIELDS.has(c)
                               ? <>{c}{sortMark(c)}<br /><span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>(단위:원)</span></>
@@ -2370,6 +2380,7 @@ export default function Home() {
                           <th key={c} className="detail-insurance"
                             style={{ ...thStyle(c), cursor: 'pointer', background: active ? '#eff6ff' : thStyle(c).background, userSelect: 'none' }}
                             onClick={() => handleSort(c)}
+                            title={COLUMN_TOOLTIPS[c] || ''}
                           >
                             {NUM_FIELDS.has(c)
                               ? <>{c}{sortMark(c)}<br /><span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>(단위:원)</span></>
