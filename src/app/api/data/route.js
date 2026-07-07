@@ -81,7 +81,7 @@ export async function GET() {
         손실액:       getAccVal(row, '손실액'),
         완료보고: (() => {
           const val = getAccVal(row, '완료보고');
-          return (val === '완료' || val === '미완료') ? val : '미완료';
+          return (val === '완료' || val === '미완료' || val === '완료 (클레임 청구)' || val === '완료 (클레임 없음)') ? val : '미완료';
         })(),
         완료보고일: getAccVal(row, '완료보고일'),
         완료방법: getAccVal(row, '완료방법'),

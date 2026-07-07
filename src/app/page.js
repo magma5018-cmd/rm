@@ -53,7 +53,114 @@ const emptyRow = () => {
   };
 };
 
+// ── AI 마크다운 렌더러 헬퍼 함수 ──
+const renderMarkdown = (text) => {
+  if (!text) return null;
+  const lines = text.split('\n');
+  let inList = false;
+  let inTable = false;
+  const elements = [];
+  let listItems = [];
+  let tableRows = [];
+  let isHeaderRow = true;
+
+  const parseBold = (str) => {
+    const parts = str.split('**');
+    return parts.map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part);
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+
+    // Horizontal Rule
+    if (line === '---' || line === '***') {
+      if (inList) { elements.push(<ul key={`ul-${i}`} style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc' }}>{listItems}</ul>); inList = false; listItems = []; }
+      if (inTable) { elements.push(<table key={`tbl-${i}`} style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}><tbody>{tableRows}</tbody></table>); inTable = false; tableRows = []; }
+      elements.push(<hr key={i} style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '16px 0' }} />);
+      continue;
+    }
+
+    // Headings
+    if (line.startsWith('# ')) {
+      if (inList) { elements.push(<ul key={`ul-${i}`} style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc' }}>{listItems}</ul>); inList = false; listItems = []; }
+      elements.push(<h1 key={i} style={{ fontSize: '1.35rem', fontWeight: 800, marginTop: '20px', marginBottom: '10px', color: 'var(--primary)', borderBottom: '2px solid var(--primary)', paddingBottom: '6px' }}>{parseBold(line.substring(2))}</h1>);
+      continue;
+    }
+    if (line.startsWith('## ')) {
+      if (inList) { elements.push(<ul key={`ul-${i}`} style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc' }}>{listItems}</ul>); inList = false; listItems = []; }
+      elements.push(<h2 key={i} style={{ fontSize: '1.12rem', fontWeight: 800, marginTop: '16px', marginBottom: '8px', color: 'var(--text)', borderBottom: '1px solid var(--border)', paddingBottom: '4px' }}>{parseBold(line.substring(3))}</h2>);
+      continue;
+    }
+    if (line.startsWith('### ')) {
+      if (inList) { elements.push(<ul key={`ul-${i}`} style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc' }}>{listItems}</ul>); inList = false; listItems = []; }
+      elements.push(<h3 key={i} style={{ fontSize: '0.98rem', fontWeight: 700, marginTop: '12px', marginBottom: '6px', color: 'var(--text)' }}>{parseBold(line.substring(4))}</h3>);
+      continue;
+    }
+
+    // List items
+    if (line.startsWith('- ') || line.startsWith('* ')) {
+      if (!inList) {
+        inList = true;
+        listItems = [];
+      }
+      listItems.push(<li key={`li-${i}`} style={{ fontSize: '0.88rem', marginBottom: '6px', lineHeight: 1.5, color: '#334155' }}>{parseBold(line.substring(2))}</li>);
+      continue;
+    }
+
+    // Table items
+    if (line.startsWith('|')) {
+      if (inList) { elements.push(<ul key={`ul-${i}`} style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc' }}>{listItems}</ul>); inList = false; listItems = []; }
+      if (line.includes('---')) {
+        continue;
+      }
+      if (!inTable) {
+        inTable = true;
+        tableRows = [];
+        isHeaderRow = true;
+      }
+      const cells = line.split('|').map(c => c.trim()).filter((c, idx, arr) => idx > 0 && idx < arr.length - 1);
+      
+      const rowStyle = {
+        background: isHeaderRow ? '#f8fafc' : 'transparent',
+        borderBottom: '1px solid var(--border)'
+      };
+      
+      const cellStyle = {
+        padding: '10px 14px',
+        fontWeight: isHeaderRow ? 700 : 500,
+        textAlign: 'left',
+        fontSize: '0.85rem',
+        border: '1px solid var(--border)',
+        color: isHeaderRow ? 'var(--text)' : '#334155'
+      };
+
+      const rowCells = cells.map((cell, cIdx) => (
+        isHeaderRow ? <th key={cIdx} style={cellStyle}>{parseBold(cell)}</th> : <td key={cIdx} style={cellStyle}>{parseBold(cell)}</td>
+      ));
+      
+      tableRows.push(<tr key={`tr-${i}`} style={rowStyle}>{rowCells}</tr>);
+      isHeaderRow = false;
+      continue;
+    }
+
+    // Empty lines or normal text
+    if (inList) { elements.push(<ul key={`ul-${i}`} style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc' }}>{listItems}</ul>); inList = false; listItems = []; }
+    if (inTable) { elements.push(<table key={`tbl-${i}`} style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}><tbody>{tableRows}</tbody></table>); inTable = false; tableRows = []; }
+
+    if (line !== '') {
+      elements.push(<p key={i} style={{ fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '10px', color: '#334155' }}>{parseBold(line)}</p>);
+    }
+  }
+
+  // flush remaining
+  if (inList) { elements.push(<ul key={`ul-final`} style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc' }}>{listItems}</ul>); }
+  if (inTable) { elements.push(<table key={`tbl-final`} style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '15px' }}><tbody>{tableRows}</tbody></table>); }
+
+  return <div style={{ display: 'flex', flexDirection: 'column' }}>{elements}</div>;
+};
+
 // ── 빈 보험 행 템플릿 ──
+
 let _insId = 2;
 const genInsId = () => _insId++;
 const emptyInsRow = () => {
@@ -653,8 +760,8 @@ export default function Home() {
         if (endDate && r.사고일 > endDate) return false;
         return true;
       }
-      if (activeTab === 'active' && r.완료보고 === '완료') return false;
-      if (activeTab === 'done' && r.완료보고 !== '완료') return false;
+      if (activeTab === 'active' && r.완료보고?.startsWith('완료')) return false;
+      if (activeTab === 'done' && !r.완료보고?.startsWith('완료')) return false;
       if (startDate && r.사고일 < startDate) return false;
       if (endDate && r.사고일 > endDate) return false;
       return true;
@@ -700,14 +807,18 @@ export default function Home() {
     setRows(prev => prev.map(r => {
       if (r.id === id) {
         const updated = { ...r, [field]: value };
-        // 금액 관련 필드가 수정되면 손실액 자동 계산 (손실액 = 사고액 - 배상액 - 회수액 - 자기부담금)
-        if (['사고액', '배상액', '회수액', '자기부담금'].includes(field)) {
-          const occur = parseAmount(updated['사고액']);
-          const comp = parseAmount(updated['배상액']);
-          const recov = parseAmount(updated['회수액']);
-          const deduct = parseAmount(updated['자기부담금']);
-          const calcLoss = occur - comp - recov + deduct;
-          updated['손실액'] = calcLoss.toLocaleString();
+        // 금액 관련 필드나 완료보고 상태가 수정되면 손실액 자동 계산 (단, 완료보고가 '완료 (클레임 없음)'인 경우 손실액은 0원)
+        if (['사고액', '배상액', '회수액', '자기부담금', '완료보고'].includes(field)) {
+          if (updated['완료보고'] === '완료 (클레임 없음)') {
+            updated['손실액'] = '0';
+          } else {
+            const occur = parseAmount(updated['사고액']);
+            const comp = parseAmount(updated['배상액']);
+            const recov = parseAmount(updated['회수액']);
+            const deduct = parseAmount(updated['자기부담금']);
+            const calcLoss = occur - comp - recov + deduct;
+            updated['손실액'] = calcLoss.toLocaleString();
+          }
         }
         return updated;
       }
@@ -1107,18 +1218,27 @@ export default function Home() {
     let curr = new Date(start.getFullYear(), start.getMonth(), 1);
     while (curr <= end) {
       const label = `${curr.getFullYear()}-${String(curr.getMonth() + 1).padStart(2, '0')}`;
-      monthlyData[label] = { occur: 0, loss: 0, count: 0 };
+      monthlyData[label] = { occur: 0, loss: 0, noClaimOccur: 0, count: 0 };
       curr.setMonth(curr.getMonth() + 1);
     }
 
+    let totalNoClaimOccur = 0;
+    let totalNoClaimCount = 0;
+
     targetRows.forEach(r => {
+      const isNoClaim = r.완료보고 === '완료 (클레임 없음)';
       const occur = parseAmount(r.사고액);
-      const recov = parseAmount(r.배상액) + parseAmount(r.회수액);
-      const loss = parseAmount(r.손실액);
+      const recov = isNoClaim ? 0 : (parseAmount(r.배상액) + parseAmount(r.회수액));
+      const loss = isNoClaim ? 0 : parseAmount(r.손실액);
 
       totalOccur += occur;
       totalRecov += recov;
       totalLoss += loss;
+
+      if (isNoClaim) {
+        totalNoClaimOccur += occur;
+        totalNoClaimCount += 1;
+      }
 
       const dept = r.부서 || r.사업부 || '소속 미상';
       deptCount[dept] = (deptCount[dept] || 0) + 1;
@@ -1128,6 +1248,9 @@ export default function Home() {
       if (monthlyData[label]) {
         monthlyData[label].occur += occur;
         monthlyData[label].loss += loss;
+        if (isNoClaim) {
+          monthlyData[label].noClaimOccur += occur;
+        }
         monthlyData[label].count += 1;
       }
     });
@@ -1144,6 +1267,7 @@ export default function Home() {
       year: m.split('-')[0],
       occur: monthlyData[m].occur,
       loss: monthlyData[m].loss,
+      noClaimOccur: monthlyData[m].noClaimOccur || 0,
       count: monthlyData[m].count
     }));
 
@@ -1158,8 +1282,10 @@ export default function Home() {
       year: m.year,
       occurPct: maxVal > 0 ? (m.occur / maxVal) * 100 : 0,
       lossPct: maxVal > 0 ? (m.loss / maxVal) * 100 : 0,
+      noClaimPct: maxVal > 0 ? (m.noClaimOccur / maxVal) * 100 : 0,
       occurRaw: m.occur,
       lossRaw: m.loss,
+      noClaimRaw: m.noClaimOccur,
       count: m.count
     }));
 
@@ -1168,6 +1294,8 @@ export default function Home() {
       totalOccur,
       totalRecov,
       totalLoss,
+      totalNoClaimOccur,
+      totalNoClaimCount,
       topDepts,
       chartData,
       chartMaxVal: maxVal
@@ -1295,9 +1423,9 @@ export default function Home() {
     const todayStr = toLocalDateStr(today);
 
     const newThisWeek = rows.filter(r => r.사고접수일 >= ws && r.사고접수일 <= we && r.사고명 && r.사고명.trim() !== '');
-    const inProgress = rows.filter(r => r.완료보고 !== '완료' && r.사고명 && r.사고명.trim() !== '');
+    const inProgress = rows.filter(r => !r.완료보고?.startsWith('완료') && r.사고명 && r.사고명.trim() !== '');
     const completedThisWeek = rows.filter(r => {
-      if (r.완료보고 !== '완료') return false;
+      if (!r.완료보고?.startsWith('완료')) return false;
       // 완료보고일 기준으로 필터링하되 없으면 마지막 진행경과 날짜로 대체
       const completeDate = r.완료보고일 || (r.진행경과 && r.진행경과.length > 0 ? r.진행경과[r.진행경과.length - 1].date : null);
       if (!completeDate) return false;
@@ -1375,486 +1503,6 @@ export default function Home() {
 
   if (!isAuthenticated) {
     if (authViewMode === 'report') {
-      const renderStepIndicator = () => {
-        const progressPercent = ((reportStep - 1) / 3) * 80;
-        return (
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px', position: 'relative', width: '100%' }}>
-            <div style={{ position: 'absolute', top: '15px', left: '10%', right: '10%', height: '2px', background: '#e2e8f0', zIndex: 1 }} />
-            <div style={{ position: 'absolute', top: '15px', left: '10%', width: `${progressPercent}%`, height: '2px', background: 'var(--primary)', zIndex: 2, transition: 'width 0.3s ease' }} />
-            
-            {[1, 2, 3, 4].map((step) => {
-              const stepNames = ['기본정보 입력', '상세 정보 입력', '경위 및 증빙', 'AI 보고서 초안'];
-              const isActive = reportStep >= step;
-              const isCurrent = reportStep === step;
-              return (
-                <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3, flex: 1 }}>
-                  <div style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    background: isCurrent ? 'var(--primary)' : isActive ? 'var(--primary)' : '#e2e8f0',
-                    color: isActive ? 'white' : 'var(--text-muted)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
-                    border: isCurrent ? '4px solid #eff6ff' : 'none',
-                    transition: 'all 0.3s'
-                  }}>
-                    {step}
-                  </div>
-                  <span style={{ fontSize: '0.78rem', fontWeight: isActive ? 700 : 500, color: isActive ? 'var(--text)' : 'var(--text-muted)', marginTop: '8px' }}>
-                    {stepNames[step - 1]}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        );
-      };
-
-      const renderStepContent = () => {
-        switch (reportStep) {
-          case 1:
-            return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 800, marginBottom: '12px', color: 'var(--text)', borderBottom: '2px solid var(--border)', paddingBottom: '6px' }}>Q0. 작성자 및 담당 부서 정보</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-muted)' }}>사내 이메일 주소 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input
-                        type="email"
-                        value={qEmail}
-                        onChange={(e) => setQEmail(e.target.value)}
-                        placeholder="example@hansol.com"
-                        style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-muted)' }}>작성자 이름 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input
-                        type="text"
-                        value={qName}
-                        onChange={(e) => setQName(e.target.value)}
-                        placeholder="홍길동"
-                        style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
-                      />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '8px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-muted)' }}>담당영업팀 / 영업사원 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input
-                        type="text"
-                        value={qSalesDept}
-                        onChange={(e) => setQSalesDept(e.target.value)}
-                        placeholder="예: SALES1 / 김동하 책임"
-                        style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-muted)' }}>담당운영팀 / 운영사원 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input
-                        type="text"
-                        value={qOpsDept}
-                        onChange={(e) => setQOpsDept(e.target.value)}
-                        placeholder="예: 운영1파트 / 김현정 책임"
-                        style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
-                      />
-                    </div>
-                  </div>
-                  <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '4px', fontSize: '0.78rem' }}>AI가 완성한 최종 보고서가 전송될 본인의 사내 웹메일 주소와 관련 부서 담당 정보를 정확히 입력해 주세요.</small>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '12px', color: 'var(--text)' }}>Q1. 운송 종류 선택 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    <div
-                      onClick={() => setQCarriageType('international')}
-                      style={{
-                        padding: '24px 16px',
-                        borderRadius: '12px',
-                        border: qCarriageType === 'international' ? '2.5px solid var(--primary)' : '1.5px solid var(--border)',
-                        background: qCarriageType === 'international' ? '#eff6ff' : 'white',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                    >
-                      <span style={{ fontSize: '2rem' }}>🚢</span>
-                      <strong style={{ fontSize: '0.95rem', color: qCarriageType === 'international' ? 'var(--primary)' : 'var(--text)' }}>국제 운송</strong>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>해상/항공 수출입</span>
-                    </div>
-                    <div
-                      onClick={() => setQCarriageType('domestic')}
-                      style={{
-                        padding: '24px 16px',
-                        borderRadius: '12px',
-                        border: qCarriageType === 'domestic' ? '2.5px solid var(--primary)' : '1.5px solid var(--border)',
-                        background: qCarriageType === 'domestic' ? '#eff6ff' : 'white',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                    >
-                      <span style={{ fontSize: '2rem' }}>🚛</span>
-                      <strong style={{ fontSize: '0.95rem', color: qCarriageType === 'domestic' ? 'var(--primary)' : 'var(--text)' }}>국내 내륙 운송</strong>
-                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>내륙 수송 및 배차</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          case 2:
-            if (qCarriageType === 'international') {
-              return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '62vh', overflowY: 'auto', paddingRight: '6px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-1. Shipper 명 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qIntlShipper} onChange={(e) => setQIntlShipper(e.target.value)} style={inputStyle} placeholder="송하인/수출자" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-2. Consignee 명 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qIntlConsignee} onChange={(e) => setQIntlConsignee(e.target.value)} style={inputStyle} placeholder="수하인/수입자" />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-3. 인코텀즈 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <select value={qIntlIncoterms} onChange={(e) => setQIntlIncoterms(e.target.value)} style={selectStyle}>
-                        <option value="">선택</option>
-                        {['EXW', 'FCA', 'FOB', 'CFR', 'CIF', 'DAP', 'DDP', '기타'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-4. 세부 운송 모드 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <select value={qIntlMode} onChange={(e) => setQIntlMode(e.target.value)} style={selectStyle}>
-                        <option value="">선택</option>
-                        {['FCL 해상수출', 'LCL 해상수출', '항공수출', '해상수입', '항공수입'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-5. House B/L 번호 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qIntlHbl} onChange={(e) => setQIntlHbl(e.target.value)} style={inputStyle} placeholder="HBL 번호" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-6. Master B/L 번호</label>
-                      <input type="text" value={qIntlMbl} onChange={(e) => setQIntlMbl(e.target.value)} style={inputStyle} placeholder="MBL 번호 (선택)" />
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-7. 총 화물 가액 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <select value={qIntlCurrency} onChange={(e) => setQIntlCurrency(e.target.value)} style={{ ...selectStyle, width: '100px' }}>
-                        <option value="USD">USD</option>
-                        <option value="KRW">KRW</option>
-                        <option value="EUR">EUR</option>
-                        <option value="JPY">JPY</option>
-                      </select>
-                      <input type="text" value={qIntlValue} onChange={(e) => setQIntlValue(e.target.value.replace(/[^0-9,]/g, ''))} style={{ ...inputStyle, flex: 1 }} placeholder="숫자만 입력 (예: 50,000)" />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-8. 당사 법적 계약 관계 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <select value={qIntlContract} onChange={(e) => setQIntlContract(e.target.value)} style={selectStyle}>
-                        <option value="">선택</option>
-                        {['한솔 본사 계약', '해외법인 계약', '별도 계약서 없음'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-9. 당사 운송 주선 범위 (SOW) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <select value={qIntlSow} onChange={(e) => setQIntlSow(e.target.value)} style={selectStyle}>
-                        <option value="">선택</option>
-                        {['Door to Door', 'Door to Port', 'Port to Port', 'Port to Door'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-10. 사고 발생/추정 구간 (중복 선택 가능) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px', background: 'white' }}>
-                        {['출발지 내륙', '출발지 터미널', '메인 국제운송', '도착지 터미널', '도착지 내륙', '모름'].map(opt => {
-                          const isChecked = qIntlStage.includes(opt);
-                          return (
-                            <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem', cursor: 'pointer', fontWeight: isChecked ? 700 : 500, color: isChecked ? 'var(--primary)' : 'var(--text)' }}>
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={() => handleStageCheckboxChange(opt)}
-                                style={{ width: '13px', height: '13px', cursor: 'pointer' }}
-                              />
-                              {opt}
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-11. 수행 주체 (하청업체명) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qIntlSubcontractor} onChange={(e) => setQIntlSubcontractor(e.target.value)} style={inputStyle} placeholder="예: ○○○선사, 심천 트레일러사" />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-12. 화물 인도 당시 증빙 상태 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <select value={qIntlProof} onChange={(e) => setQIntlProof(e.target.value)} style={selectStyle}>
-                        <option value="">선택</option>
-                        {['Clean Receipt', 'Claused Receipt (인수증 리마크 기재 확보)'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-13. 사고 최초 인지 일시 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="datetime-local" value={qIntlDate} onChange={(e) => setQIntlDate(e.target.value)} style={inputStyle} />
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-14. 1차 과실 책임 주체 (현장 판단) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <select value={qIntlFault} onChange={(e) => setQIntlFault(e.target.value)} style={selectStyle}>
-                      <option value="">선택</option>
-                      {['하청 운송사·선사·항공사 과실', '화주·수출자 과실', '당사 자체 과실', '원인 불명'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                    </select>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-15. 사고 원인 대분류 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <select value={qIntlCauseCategory} onChange={(e) => { setQIntlCauseCategory(e.target.value); setQIntlCauseDetail(''); }} style={selectStyle}>
-                        <option value="">선택</option>
-                        {['장비결함', '운송하역 파손', '포장불량', '환경요인'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-15 세부 중분류 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <select value={qIntlCauseDetail} onChange={(e) => setQIntlCauseDetail(e.target.value)} style={selectStyle} disabled={!qIntlCauseCategory}>
-                        <option value="">선택</option>
-                        {qIntlCauseCategory && causeDetailsMap[qIntlCauseCategory].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-16. 화물 품목 (아이템) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qIntlItem} onChange={(e) => setQIntlItem(e.target.value)} style={inputStyle} placeholder="예: ACRYLIC SOLID SURFACE (바닥재)" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-17. 선사/항공사 명 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qIntlLiner} onChange={(e) => setQIntlLiner(e.target.value)} style={inputStyle} placeholder="예: 쉽코(LCL), 머스크" />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-18. 해외 파트너/법인 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qIntlPartner} onChange={(e) => setQIntlPartner(e.target.value)} style={inputStyle} placeholder="예: 한솔 미주법인, 해외 대리점" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-24. 구체적 사고 발생 장소 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qIntlLocation} onChange={(e) => setQIntlLocation(e.target.value)} style={inputStyle} placeholder="예: LX HAUSYS USA 공장" />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-19. 출발지 및 출발일 (POL/ATD) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qIntlPolAtd} onChange={(e) => setQIntlPolAtd(e.target.value)} style={inputStyle} placeholder="예: 6/1 BUSAN" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-20. 도착지 및 도착일 (POD/ATA) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qIntlPodAta} onChange={(e) => setQIntlPodAta(e.target.value)} style={inputStyle} placeholder="예: 6/24 PLACENTIA, CA" />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-21. 총 선적 물량 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qIntlTotalQty} onChange={(e) => setQIntlTotalQty(e.target.value)} style={inputStyle} placeholder="예: 2 PACKAGE" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-22. 파손 물량 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qIntlLossQty} onChange={(e) => setQIntlLossQty(e.target.value)} style={inputStyle} placeholder="예: 2 PLT (또는 확인중)" />
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-23. 파손건 CI Value <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <input type="text" value={qIntlLossValue} onChange={(e) => setQIntlLossValue(e.target.value)} style={inputStyle} placeholder="예: USD 8,995.20 (또는 확인중)" />
-                  </div>
-                </div>
-              );
-            } else {
-              return (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '62vh', overflowY: 'auto', paddingRight: '6px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-1. 거래처 (화주) 명 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qDomClient} onChange={(e) => setQDomClient(e.target.value)} style={inputStyle} placeholder="예: 한솔유통" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-4. 운송장 또는 배차 번호 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qDomWaybill} onChange={(e) => setQDomWaybill(e.target.value)} style={inputStyle} placeholder="번호 입력" />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-2. 상차지 (출발지) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qDomOrigin} onChange={(e) => setQDomOrigin(e.target.value)} style={inputStyle} placeholder="예: 이천1센터" />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-3. 하차지 (도착지) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qDomDestination} onChange={(e) => setQDomDestination(e.target.value)} style={inputStyle} placeholder="예: 파주2디포" />
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-5. 화물 품목 및 피해 물량 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <input type="text" value={qDomItem} onChange={(e) => setQDomItem(e.target.value)} style={inputStyle} placeholder="예: 전자부품 3 Pallet" />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-6. 실제 발생 손해액 (원) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <input type="text" value={qDomLossAmount} onChange={(e) => setQDomLossAmount(e.target.value.replace(/[^0-9,]/g, ''))} style={inputStyle} placeholder="숫자만 입력 (원)" />
-                    <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '4px', fontSize: '0.75rem', lineHeight: 1.4 }}>
-                      ※ 국내 내륙운송은 국제 운송과 달리 SDR 책임 한도가 없으며, 실제 발생한 실손해액만큼만 보상하는 실손해 보상 원칙을 따릅니다. 원가 기준 예상 피해액을 기입해 주세요.
-                    </small>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-7. 과실 책임 주체 (현장 판단) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <select value={qDomFault} onChange={(e) => setQDomFault(e.target.value)} style={selectStyle}>
-                        <option value="">선택</option>
-                        {['당사 지정 위탁 운송사(지입차주) 과실', '화주측 적재 부실', '당사 자체 과실', '원인 불명'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-8. 실제 운송 수행 업체/차주명 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="text" value={qDomSubcontractor} onChange={(e) => setQDomSubcontractor(e.target.value)} style={inputStyle} placeholder="업체 또는 성함" />
-                    </div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-9. 사고 원인 분류 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <select value={qDomCause} onChange={(e) => setQDomCause(e.target.value)} style={selectStyle}>
-                        <option value="">선택</option>
-                        {['차량 전도·충돌', '상하역 중 지게차 충격', '결로로 인한 곰팡이', '우천 침수(Wet)', '적재 고정 부실'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-10. 사고 최초 인지 일시 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input type="datetime-local" value={qDomDate} onChange={(e) => setQDomDate(e.target.value)} style={inputStyle} />
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-          case 3:
-            return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div>
-                  <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '8px', fontSize: '0.78rem', lineHeight: 1.45 }}>
-                    <strong style={{ color: 'var(--primary)', display: 'block', marginBottom: '4px' }}>💡 현장 필수 작성 가이드 (육하원칙)</strong>
-                    <strong>누가(Who)</strong>: 사고 유발 주체 (예: 도착지 물류사 Guchang)<br/>
-                    <strong>언제(When)</strong>: 사고 발생 또는 최초 데미지 인지 시점<br/>
-                    <strong>어디서(Where)</strong>: 구체적 장소 (예: 하이퐁 터미널 보관 야드)<br/>
-                    <strong>무엇을(What)</strong>: 파손된 구체적 화물 및 패키지 상태 (예: 1 Pallet 젖음)<br/>
-                    <strong>어떻게/왜(How/Why)</strong>: 컨테이너 반출 당시 상단 5cm 구멍 타공 발견 등
-                  </div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>Q19. 상세 사고 경위 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                  <textarea
-                    value={qDetails}
-                    onChange={(e) => setQDetails(e.target.value)}
-                    placeholder="가이드에 맞게 상세한 경위를 기술해 주세요."
-                    style={{ width: '100%', height: '140px', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.92rem', resize: 'vertical', fontFamily: 'inherit', outline: 'none' }}
-                  />
-                </div>
-                <div style={{ background: '#f0fdf4', padding: '16px', borderRadius: '10px', border: '1px dashed #bbf7d0', marginTop: '12px' }}>
-                  <strong style={{ color: '#166534', display: 'block', marginBottom: '6px', fontSize: '0.88rem' }}>📎 Q20. 현장 사진 및 증빙 자료 안내</strong>
-                  <p style={{ fontSize: '0.8rem', color: '#1e3a1e', lineHeight: 1.5, margin: 0 }}>
-                    용량 제한 및 안정적인 접수를 위해 파일 업로드 기능이 제외되었습니다. <br />
-                    <strong>현장 실물 파손 사진 및 관련 서류(PDF 등)는 본 접수를 최종 제출하신 후, 본인 이메일로 수신되는 보고서 메일에 답장(회신)으로 직접 첨부하여 발송해 주시기 바랍니다.</strong>
-                  </p>
-                </div>
-              </div>
-            );
-          case 4:
-            return (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
-                {isGeneratingAIReport ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '340px', gap: '16px' }}>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      borderRadius: '50%',
-                      border: '4px solid #e2e8f0',
-                      borderTopColor: 'var(--primary)',
-                      animation: 'spin 1s linear infinite'
-                    }} />
-                    <style>{`
-                      @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                      }
-                    `}</style>
-                    <div style={{ fontWeight: 700, color: 'var(--text)', fontSize: '1.05rem' }}>Gemini가 전문 사고보고서 초안을 작성하고 있습니다...</div>
-                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>구글 시트에 사고접수 저장을 완료하고 AI 보고서를 생성하는 중입니다.</div>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--success)' }}>
-                        ✓ 구글 시트 저장 및 AI 보고서 초안 작성이 완료되었습니다. (접수 ID: {currentReportId})
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(aiReportText);
-                          alert('보고서 내용이 클립보드에 복사되었습니다.');
-                        }}
-                        className="btn btn-primary"
-                        style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-                      >
-                        📋 보고서 전체 복사
-                      </button>
-                    </div>
-
-                    <div style={{
-                      flex: 1,
-                      overflowY: 'auto',
-                      padding: '24px',
-                      background: '#f8fafc',
-                      border: '1px solid var(--border)',
-                      borderRadius: '12px',
-                      maxHeight: '38vh',
-                      fontFamily: 'inherit',
-                      fontSize: '0.92rem',
-                      lineHeight: 1.6,
-                      color: '#1e293b',
-                      whiteSpace: 'pre-wrap'
-                    }}>
-                      {aiReportText || '보고서 생성 결과를 불러오는 데 실패했습니다. 다시 시도해 주세요.'}
-                    </div>
-
-                    <div style={{ background: '#eff6ff', padding: '14px 18px', borderRadius: '10px', border: '1px solid #bfdbfe' }}>
-                      <p style={{ fontSize: '0.82rem', color: '#1e40af', margin: 0, lineHeight: 1.5 }}>
-                        💡 <strong>입력한 내용에 오타나 오류가 있으신가요?</strong> <br />
-                        하단의 <strong>[수정하고 다시 쓰기]</strong> 버튼을 누르면 이전 단계로 돌아가 입력값을 수정한 후 재제출하실 수 있습니다. 재제출 시 구글 시트의 기존 행 데이터는 새로운 행을 만들지 않고 자동으로 업데이트됩니다.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          default:
-            return null;
-        }
-      };
-
       const handleNext = () => {
         if (reportStep === 1) {
           if (!qEmail || !qEmail.toLowerCase().endsWith('@hansol.com')) {
@@ -1870,6 +1518,8 @@ export default function Home() {
           setReportStep(3);
         }
       };
+
+      const progressPercent = ((reportStep - 1) / 3) * 80;
 
       return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100vw', height: '100vh', background: '#f8fafc', padding: '20px' }}>
@@ -1893,9 +1543,467 @@ export default function Home() {
 
             {/* Body */}
             <div style={{ padding: '28px', flex: 1 }}>
-              {renderStepIndicator()}
+              {/* Step Indicator (inline) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px', position: 'relative', width: '100%' }}>
+                <div style={{ position: 'absolute', top: '15px', left: '10%', right: '10%', height: '2px', background: '#e2e8f0', zIndex: 1 }} />
+                <div style={{ position: 'absolute', top: '15px', left: '10%', width: `${progressPercent}%`, height: '2px', background: 'var(--primary)', zIndex: 2, transition: 'width 0.3s ease' }} />
+                
+                {[1, 2, 3, 4].map((step) => {
+                  const stepNames = ['기본정보 입력', '상세 정보 입력', '경위 및 증빙', 'AI 보고서 초안'];
+                  const isActive = reportStep >= step;
+                  const isCurrent = reportStep === step;
+                  return (
+                    <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 3, flex: 1 }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: isCurrent ? 'var(--primary)' : isActive ? 'var(--primary)' : '#e2e8f0',
+                        color: isActive ? 'white' : 'var(--text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontWeight: 700,
+                        fontSize: '0.9rem',
+                        border: isCurrent ? '4px solid #eff6ff' : 'none',
+                        transition: 'all 0.3s'
+                      }}>
+                        {step}
+                      </div>
+                      <span style={{ fontSize: '0.78rem', fontWeight: isActive ? 700 : 500, color: isActive ? 'var(--text)' : 'var(--text-muted)', marginTop: '8px' }}>
+                        {stepNames[step - 1]}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
               <div>
-                {renderStepContent()}
+                {/* Step 1 Content */}
+                {reportStep === 1 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 800, marginBottom: '12px', color: 'var(--text)', borderBottom: '2px solid var(--border)', paddingBottom: '6px' }}>Q0. 작성자 및 담당 부서 정보</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '12px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-muted)' }}>사내 이메일 주소 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                          <input
+                            type="email"
+                            value={qEmail}
+                            onChange={(e) => setQEmail(e.target.value)}
+                            placeholder="example@hansol.com"
+                            style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-muted)' }}>작성자 이름 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                          <input
+                            type="text"
+                            value={qName}
+                            onChange={(e) => setQName(e.target.value)}
+                            placeholder="홍길동"
+                            style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '8px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-muted)' }}>담당영업팀 / 영업사원 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                          <input
+                            type="text"
+                            value={qSalesDept}
+                            onChange={(e) => setQSalesDept(e.target.value)}
+                            placeholder="예: SALES1 / 김동하 책임"
+                            style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-muted)' }}>담당운영팀 / 운영사원 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                          <input
+                            type="text"
+                            value={qOpsDept}
+                            onChange={(e) => setQOpsDept(e.target.value)}
+                            placeholder="예: 운영1파트 / 김현정 책임"
+                            style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
+                          />
+                        </div>
+                      </div>
+                      <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '4px', fontSize: '0.78rem' }}>AI가 완성한 최종 보고서가 전송될 본인의 사내 웹메일 주소와 관련 부서 담당 정보를 정확히 입력해 주세요.</small>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '12px', color: 'var(--text)' }}>Q1. 운송 종류 선택 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                        <div
+                          onClick={() => setQCarriageType('international')}
+                          style={{
+                            padding: '24px 16px',
+                            borderRadius: '12px',
+                            border: qCarriageType === 'international' ? '2.5px solid var(--primary)' : '1.5px solid var(--border)',
+                            background: qCarriageType === 'international' ? '#eff6ff' : 'white',
+                            textAlign: 'center',
+                             cursor: 'pointer',
+                             transition: 'all 0.2s',
+                             display: 'flex',
+                             flexDirection: 'column',
+                             alignItems: 'center',
+                             gap: '8px'
+                           }}
+                         >
+                           <span style={{ fontSize: '2rem' }}>🚢</span>
+                           <strong style={{ fontSize: '0.95rem', color: qCarriageType === 'international' ? 'var(--primary)' : 'var(--text)' }}>국제 운송</strong>
+                           <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>해상/항공 수출입</span>
+                         </div>
+                         <div
+                           onClick={() => setQCarriageType('domestic')}
+                           style={{
+                             padding: '24px 16px',
+                             borderRadius: '12px',
+                             border: qCarriageType === 'domestic' ? '2.5px solid var(--primary)' : '1.5px solid var(--border)',
+                             background: qCarriageType === 'domestic' ? '#eff6ff' : 'white',
+                             textAlign: 'center',
+                             cursor: 'pointer',
+                             transition: 'all 0.2s',
+                             display: 'flex',
+                             flexDirection: 'column',
+                             alignItems: 'center',
+                             gap: '8px'
+                           }}
+                         >
+                           <span style={{ fontSize: '2rem' }}>🚛</span>
+                           <strong style={{ fontSize: '0.95rem', color: qCarriageType === 'domestic' ? 'var(--primary)' : 'var(--text)' }}>국내 내륙 운송</strong>
+                           <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>내륙 수송 및 배차</span>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+                 )}
+
+                 {/* Step 2 Content: International */}
+                 {reportStep === 2 && qCarriageType === 'international' && (
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '62vh', overflowY: 'auto', paddingRight: '6px' }}>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-1. Shipper 명 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qIntlShipper} onChange={(e) => setQIntlShipper(e.target.value)} style={inputStyle} placeholder="송하인/수출자" />
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-2. Consignee 명 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qIntlConsignee} onChange={(e) => setQIntlConsignee(e.target.value)} style={inputStyle} placeholder="수하인/수입자" />
+                       </div>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-3. 인코텀즈 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <select value={qIntlIncoterms} onChange={(e) => setQIntlIncoterms(e.target.value)} style={selectStyle}>
+                           <option value="">선택</option>
+                           {['EXW', 'FCA', 'FOB', 'CFR', 'CIF', 'DAP', 'DDP', '기타'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                         </select>
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-4. 세부 운송 모드 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <select value={qIntlMode} onChange={(e) => setQIntlMode(e.target.value)} style={selectStyle}>
+                           <option value="">선택</option>
+                           {['FCL 해상수출', 'LCL 해상수출', '항공수출', '해상수입', '항공수입'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                         </select>
+                       </div>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-5. House B/L 번호 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qIntlHbl} onChange={(e) => setQIntlHbl(e.target.value)} style={inputStyle} placeholder="HBL 번호" />
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-6. Master B/L 번호</label>
+                         <input type="text" value={qIntlMbl} onChange={(e) => setQIntlMbl(e.target.value)} style={inputStyle} placeholder="MBL 번호 (선택)" />
+                       </div>
+                     </div>
+                     <div>
+                       <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-7. 총 화물 가액 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                       <div style={{ display: 'flex', gap: '8px' }}>
+                         <select value={qIntlCurrency} onChange={(e) => setQIntlCurrency(e.target.value)} style={{ ...selectStyle, width: '100px' }}>
+                           <option value="USD">USD</option>
+                           <option value="KRW">KRW</option>
+                           <option value="EUR">EUR</option>
+                           <option value="JPY">JPY</option>
+                         </select>
+                         <input type="text" value={qIntlValue} onChange={(e) => setQIntlValue(e.target.value.replace(/[^0-9,]/g, ''))} style={{ ...inputStyle, flex: 1 }} placeholder="숫자만 입력 (예: 50,000)" />
+                       </div>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-8. 당사 법적 계약 관계 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <select value={qIntlContract} onChange={(e) => setQIntlContract(e.target.value)} style={selectStyle}>
+                           <option value="">선택</option>
+                           {['한솔 본사 계약', '해외법인 계약', '별도 계약서 없음'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                         </select>
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-9. 당사 운송 주선 범위 (SOW) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <select value={qIntlSow} onChange={(e) => setQIntlSow(e.target.value)} style={selectStyle}>
+                           <option value="">선택</option>
+                           {['Door to Door', 'Door to Port', 'Port to Port', 'Port to Door'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                         </select>
+                       </div>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-10. 사고 발생/추정 구간 (중복 선택 가능) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px', background: 'white' }}>
+                           {['출발지 내륙', '출발지 터미널', '메인 국제운송', '도착지 터미널', '도착지 내륙', '모름'].map(opt => {
+                             const isChecked = qIntlStage.includes(opt);
+                             return (
+                               <label key={opt} style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem', cursor: 'pointer', fontWeight: isChecked ? 700 : 500, color: isChecked ? 'var(--primary)' : 'var(--text)' }}>
+                                 <input
+                                   type="checkbox"
+                                   checked={isChecked}
+                                   onChange={() => handleStageCheckboxChange(opt)}
+                                   style={{ width: '13px', height: '13px', cursor: 'pointer' }}
+                                 />
+                                 {opt}
+                               </label>
+                             );
+                           })}
+                         </div>
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-11. 수행 주체 (하청업체명) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qIntlSubcontractor} onChange={(e) => setQIntlSubcontractor(e.target.value)} style={inputStyle} placeholder="예: ○○○선사, 심천 트레일러사" />
+                       </div>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-12. 화물 인도 당시 증빙 상태 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <select value={qIntlProof} onChange={(e) => setQIntlProof(e.target.value)} style={selectStyle}>
+                           <option value="">선택</option>
+                           {['Clean Receipt', 'Claused Receipt (인수증 리마크 기재 확보)'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                         </select>
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-13. 사고 최초 인지 일시 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="datetime-local" value={qIntlDate} onChange={(e) => setQIntlDate(e.target.value)} style={inputStyle} />
+                       </div>
+                     </div>
+                     <div>
+                       <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-14. 1차 과실 책임 주체 (현장 판단) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                       <select value={qIntlFault} onChange={(e) => setQIntlFault(e.target.value)} style={selectStyle}>
+                         <option value="">선택</option>
+                         {['하청 운송사·선사·항공사 과실', '화주·수출자 과실', '당사 자체 과실', '원인 불명'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                       </select>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-15. 사고 원인 대분류 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <select value={qIntlCauseCategory} onChange={(e) => { setQIntlCauseCategory(e.target.value); setQIntlCauseDetail(''); }} style={selectStyle}>
+                           <option value="">선택</option>
+                           {['장비결함', '운송하역 파손', '포장불량', '환경요인'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                         </select>
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-15 세부 중분류 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <select value={qIntlCauseDetail} onChange={(e) => setQIntlCauseDetail(e.target.value)} style={selectStyle} disabled={!qIntlCauseCategory}>
+                           <option value="">선택</option>
+                           {qIntlCauseCategory && causeDetailsMap[qIntlCauseCategory].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                         </select>
+                       </div>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-16. 화물 품목 (아이템) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qIntlItem} onChange={(e) => setQIntlItem(e.target.value)} style={inputStyle} placeholder="예: ACRYLIC SOLID SURFACE (바닥재)" />
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-17. 선사/항공사 명 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qIntlLiner} onChange={(e) => setQIntlLiner(e.target.value)} style={inputStyle} placeholder="예: 쉽코(LCL), 머스크" />
+                       </div>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-18. 해외 파트너/법인 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qIntlPartner} onChange={(e) => setQIntlPartner(e.target.value)} style={inputStyle} placeholder="예: 한솔 미주법인, 해외 대리점" />
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-24. 구체적 사고 발생 장소 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qIntlLocation} onChange={(e) => setQIntlLocation(e.target.value)} style={inputStyle} placeholder="예: LX HAUSYS USA 공장" />
+                       </div>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-19. 출발지 및 출발일 (POL/ATD) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qIntlPolAtd} onChange={(e) => setQIntlPolAtd(e.target.value)} style={inputStyle} placeholder="예: 6/1 BUSAN" />
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-20. 도착지 및 도착일 (POD/ATA) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qIntlPodAta} onChange={(e) => setQIntlPodAta(e.target.value)} style={inputStyle} placeholder="예: 6/24 PLACENTIA, CA" />
+                       </div>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-21. 총 선적 물량 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qIntlTotalQty} onChange={(e) => setQIntlTotalQty(e.target.value)} style={inputStyle} placeholder="예: 2 PACKAGE" />
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-22. 파손 물량 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qIntlLossQty} onChange={(e) => setQIntlLossQty(e.target.value)} style={inputStyle} placeholder="예: 2 PLT (또는 확인중)" />
+                       </div>
+                     </div>
+                     <div>
+                       <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-23. 파손건 CI Value <span style={{ color: 'var(--danger)' }}>*</span></label>
+                       <input type="text" value={qIntlLossValue} onChange={(e) => setQIntlLossValue(e.target.value)} style={inputStyle} placeholder="예: USD 8,995.20 (또는 확인중)" />
+                     </div>
+                   </div>
+                 )}
+
+                 {/* Step 2 Content: Domestic */}
+                 {reportStep === 2 && qCarriageType !== 'international' && (
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '62vh', overflowY: 'auto', paddingRight: '6px' }}>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-1. 거래처 (화주) 명 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qDomClient} onChange={(e) => setQDomClient(e.target.value)} style={inputStyle} placeholder="예: 한솔유통" />
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-4. 운송장 또는 배차 번호 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qDomWaybill} onChange={(e) => setQDomWaybill(e.target.value)} style={inputStyle} placeholder="번호 입력" />
+                       </div>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-2. 상차지 (출발지) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qDomOrigin} onChange={(e) => setQDomOrigin(e.target.value)} style={inputStyle} placeholder="예: 이천1센터" />
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-3. 하차지 (도착지) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qDomDestination} onChange={(e) => setQDomDestination(e.target.value)} style={inputStyle} placeholder="예: 파주2디포" />
+                       </div>
+                     </div>
+                     <div>
+                       <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-5. 화물 품목 및 피해 물량 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                       <input type="text" value={qDomItem} onChange={(e) => setQDomItem(e.target.value)} style={inputStyle} placeholder="예: 전자부품 3 Pallet" />
+                     </div>
+                     <div>
+                       <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-6. 실제 발생 손해액 (원) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                       <input type="text" value={qDomLossAmount} onChange={(e) => setQDomLossAmount(e.target.value.replace(/[^0-9,]/g, ''))} style={inputStyle} placeholder="숫자만 입력 (원)" />
+                       <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '4px', fontSize: '0.75rem', lineHeight: 1.4 }}>
+                         ※ 국내 내륙운송은 국제 운송과 달리 SDR 책임 한도가 없으며, 실제 발생한 실손해액만큼만 보상하는 실손해 보상 원칙을 따릅니다. 원가 기준 예상 피해액을 기입해 주세요.
+                       </small>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-7. 과실 책임 주체 (현장 판단) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <select value={qDomFault} onChange={(e) => setQDomFault(e.target.value)} style={selectStyle}>
+                           <option value="">선택</option>
+                           {['당사 지정 위탁 운송사(지입차주) 과실', '화주측 적재 부실', '당사 자체 과실', '원인 불명'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                         </select>
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-8. 실제 운송 수행 업체/차주명 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="text" value={qDomSubcontractor} onChange={(e) => setQDomSubcontractor(e.target.value)} style={inputStyle} placeholder="업체 또는 성함" />
+                       </div>
+                     </div>
+                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-9. 사고 원인 분류 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <select value={qDomCause} onChange={(e) => setQDomCause(e.target.value)} style={selectStyle}>
+                           <option value="">선택</option>
+                           {['차량 전도·충돌', '상하역 중 지게차 충격', '결로로 인한 곰팡이', '우천 침수(Wet)', '적재 고정 부실'].map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                         </select>
+                       </div>
+                       <div>
+                         <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-10. 사고 최초 인지 일시 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                         <input type="datetime-local" value={qDomDate} onChange={(e) => setQDomDate(e.target.value)} style={inputStyle} />
+                       </div>
+                     </div>
+                   </div>
+                 )}
+
+                 {/* Step 3 Content */}
+                 {reportStep === 3 && (
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                     <div>
+                       <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '8px', fontSize: '0.78rem', lineHeight: 1.45 }}>
+                         <strong style={{ color: 'var(--primary)', display: 'block', marginBottom: '4px' }}>💡 현장 필수 작성 가이드 (육하원칙)</strong>
+                         <strong>누가(Who)</strong>: 사고 유발 주체 (예: 도착지 물류사 Guchang)<br/>
+                         <strong>언제(When)</strong>: 사고 발생 또는 최초 데미지 인지 시점<br/>
+                         <strong>어디서(Where)</strong>: 구체적 장소 (예: 하이퐁 터미널 보관 야드)<br/>
+                         <strong>무엇을(What)</strong>: 파손된 구체적 화물 및 패키지 상태 (예: 1 Pallet 젖음)<br/>
+                         <strong>어떻게/왜(How/Why)</strong>: 컨테이너 반출 당시 상단 5cm 구멍 타공 발견 등
+                       </div>
+                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>Q19. 상세 사고 경위 <span style={{ color: 'var(--danger)' }}>*</span></label>
+                       <textarea
+                         value={qDetails}
+                         onChange={(e) => setQDetails(e.target.value)}
+                         placeholder="가이드에 맞게 상세한 경위를 기술해 주세요."
+                         style={{ width: '100%', height: '140px', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.92rem', resize: 'vertical', fontFamily: 'inherit', outline: 'none' }}
+                       />
+                     </div>
+                     <div style={{ background: '#f0fdf4', padding: '16px', borderRadius: '10px', border: '1px dashed #bbf7d0', marginTop: '12px' }}>
+                       <strong style={{ color: '#166534', display: 'block', marginBottom: '6px', fontSize: '0.88rem' }}>📎 Q20. 현장 사진 및 증빙 자료 안내</strong>
+                       <p style={{ fontSize: '0.8rem', color: '#1e3a1e', lineHeight: 1.5, margin: 0 }}>
+                         용량 제한 및 안정적인 접수를 위해 파일 업로드 기능이 제외되었습니다. <br />
+                         <strong>현장 실물 파손 사진 및 관련 서류(PDF 등)는 본 접수를 최종 제출하신 후, 본인 이메일로 수신되는 보고서 메일에 답장(회신)으로 직접 첨부하여 발송해 주시기 바랍니다.</strong>
+                       </p>
+                     </div>
+                   </div>
+                 )}
+
+                 {/* Step 4 Content */}
+                 {reportStep === 4 && (
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
+                     {isGeneratingAIReport ? (
+                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '340px', gap: '16px' }}>
+                         <div className="spinner" />
+                         <div style={{ fontWeight: 700, color: 'var(--text)', fontSize: '1.05rem' }}>Gemini가 전문 사고보고서 초안을 작성하고 있습니다...</div>
+                         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>구글 시트에 사고접수 저장을 완료하고 AI 보고서를 생성하는 중입니다.</div>
+                       </div>
+                     ) : (
+                       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                           <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--success)' }}>
+                             ✓ 구글 시트 저장 및 AI 보고서 초안 작성이 완료되었습니다. (접수 ID: {currentReportId})
+                           </span>
+                           <button
+                             type="button"
+                             onClick={() => {
+                               navigator.clipboard.writeText(aiReportText);
+                               alert('보고서 내용이 클립보드에 복사되었습니다.');
+                             }}
+                             className="btn btn-primary"
+                             style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+                           >
+                             📋 보고서 전체 복사
+                           </button>
+                         </div>
+
+                         <div style={{
+                           flex: 1,
+                           overflowY: 'auto',
+                           padding: '24px',
+                           background: '#f8fafc',
+                           border: '1px solid var(--border)',
+                           borderRadius: '12px',
+                           maxHeight: '38vh',
+                           fontFamily: 'inherit',
+                           fontSize: '0.92rem',
+                           lineHeight: 1.6,
+                           color: '#1e293b',
+                           whiteSpace: 'pre-wrap'
+                         }}>
+                           {aiReportText ? renderMarkdown(aiReportText) : '보고서 생성 결과를 불러오는 데 실패했습니다. 다시 시도해 주세요.'}
+                         </div>
+
+                         <div style={{ background: '#eff6ff', padding: '14px 18px', borderRadius: '10px', border: '1px solid #bfdbfe' }}>
+                           <p style={{ fontSize: '0.82rem', color: '#1e40af', margin: 0, lineHeight: 1.5 }}>
+                             💡 <strong>입력한 내용에 오타나 오류가 있으신가요?</strong> <br />
+                             하단의 <strong>[수정하고 다시 쓰기]</strong> 버튼을 누르면 이전 단계로 돌아가 입력값을 수정한 후 재제출하실 수 있습니다. 재제출 시 구글 시트의 기존 행 데이터는 새로운 행을 만들지 않고 자동으로 업데이트됩니다.
+                           </p>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 )}
+               </div>
+
                 
                 {/* Footer Buttons */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '28px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
@@ -1958,7 +2066,6 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </div>
       );
     }
 
@@ -2030,7 +2137,7 @@ export default function Home() {
                 <button onClick={() => setDrillDetail(null)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: 'white', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontWeight: 700, flexShrink: 0, marginLeft: '16px', fontSize: '0.9rem' }}>✕</button>
               </div>
               <div style={{ marginTop: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 700, background: drillDetail.완료보고 === '완료' ? '#dcfce7' : '#fef9c3', color: drillDetail.완료보고 === '완료' ? '#166534' : '#854d0e' }}>{drillDetail.완료보고 || '미완료'}</span>
+                <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 700, background: drillDetail.완료보고?.startsWith('완료') ? '#dcfce7' : '#fef9c3', color: drillDetail.완료보고?.startsWith('완료') ? '#166534' : '#854d0e' }}>{drillDetail.완료보고 || '미완료'}</span>
                 <span style={{ padding: '3px 10px', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 700, background: drillDetail.보험접수 === 'Y' ? '#dbeafe' : 'rgba(255,255,255,0.15)', color: drillDetail.보험접수 === 'Y' ? '#1e40af' : 'rgba(255,255,255,0.9)' }}>보험 {drillDetail.보험접수 === 'Y' ? '접수' : '미접수'}</span>
               </div>
             </div>
@@ -2134,7 +2241,7 @@ export default function Home() {
               )}
 
               {/* 완료 정보 */}
-              {(drillDetail.완료보고 === '완료' || drillDetail.완료보고일 || drillDetail.완료방법) && (
+              {(drillDetail.완료보고?.startsWith('완료') || drillDetail.완료보고일 || drillDetail.완료방법) && (
                 <div>
                   <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '10px' }}>완료 정보</div>
                   <div style={{ background: '#f0fdf4', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -2509,12 +2616,13 @@ export default function Home() {
                           <select data-table="acc" data-row={rIdx} data-col={20} className="cell-select" value={row['완료보고'] || '미완료'} onChange={e => {
                             const val = e.target.value;
                             updateCell(row.id, '완료보고', val);
-                            if (val === '완료' && !row['완료보고일']) {
+                            if (val.startsWith('완료') && !row['완료보고일']) {
                               updateCell(row.id, '완료보고일', new Date().toISOString().split('T')[0]);
                             }
-                          }} style={{ minWidth: '90px' }}>
+                          }} style={{ minWidth: '130px' }}>
                             <option value="미완료">미완료</option>
-                            <option value="완료">완료</option>
+                            <option value="완료 (클레임 청구)">완료 (클레임 청구)</option>
+                            <option value="완료 (클레임 없음)">완료 (클레임 없음)</option>
                           </select>
                         </td>
                         {/* 완료보고일 (data-col 21) */}
@@ -2596,12 +2704,39 @@ export default function Home() {
               </div>
 
               {/* 통계 카드 */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                 {[
-                  { label: '접수 사고 건수', value: `${dashboardStats.totalCount} 건`, sub: '선택 기간 기준', color: 'var(--text)' },
-                  { label: '총 사고 발생액 합계', value: `₩ ${dashboardStats.totalOccur.toLocaleString()}`, sub: '발생액 기준 누계', color: 'var(--text)' },
-                  { label: '보험 보상 및 회수액', value: `₩ ${dashboardStats.totalRecov.toLocaleString()}`, sub: '보상+배상+회수', color: 'var(--text)' },
-                  { label: '회사 순 손실액 합계', value: `₩ ${dashboardStats.totalLoss.toLocaleString()}`, sub: '최종 손실 누계', color: '#ef4444', highlight: true }
+                  { 
+                    label: '접수 사고 건수', 
+                    value: `${dashboardStats.totalCount} 건`, 
+                    sub: `클레임 없음: ${dashboardStats.totalNoClaimCount}건 포함`, 
+                    color: 'var(--text)' 
+                  },
+                  { 
+                    label: '총 사고 발생액 합계', 
+                    value: `₩ ${dashboardStats.totalOccur.toLocaleString()}`, 
+                    sub: `클레임 없음: ₩ ${dashboardStats.totalNoClaimOccur.toLocaleString()} 포함`, 
+                    color: 'var(--text)' 
+                  },
+                  { 
+                    label: '클레임 면책(없음) 합계', 
+                    value: `₩ ${dashboardStats.totalNoClaimOccur.toLocaleString()}`, 
+                    sub: `면책/무이의 종결 ${dashboardStats.totalNoClaimCount}건`, 
+                    color: '#10b981' 
+                  },
+                  { 
+                    label: '보험 보상 및 회수액', 
+                    value: `₩ ${dashboardStats.totalRecov.toLocaleString()}`, 
+                    sub: '보상+배상+회수', 
+                    color: 'var(--text)' 
+                  },
+                  { 
+                    label: '회사 순 손실액 합계', 
+                    value: `₩ ${dashboardStats.totalLoss.toLocaleString()}`, 
+                    sub: '최종 손실 누계', 
+                    color: '#ef4444', 
+                    highlight: true 
+                  }
                 ].map((s, i) => (
                   <div key={i} className="panel" style={{ padding: '24px', border: s.highlight ? '2px solid #fee2e2' : '1px solid var(--border)' }}>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '12px' }}>{s.label}</div>
@@ -2622,6 +2757,9 @@ export default function Home() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         <div style={{ width: '12px', height: '12px', background: 'var(--primary)', borderRadius: '3px' }} /> 최종 손실액
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        <div style={{ width: '12px', height: '12px', background: '#a7f3d0', borderRadius: '3px' }} /> 클레임 없음
                       </div>
                     </div>
                   </div>
@@ -2659,12 +2797,16 @@ export default function Home() {
                             >
                               <div style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '2px', alignItems: 'flex-end', height: '100%' }}>
                                 <div
-                                  style={{ width: '35%', height: `${Math.max(2, d.occurPct)}%`, background: isSelected ? '#60a5fa' : '#bfdbfe', borderRadius: '4px 4px 0 0', transition: 'all 0.2s' }}
+                                  style={{ width: '28%', height: `${Math.max(2, d.occurPct)}%`, background: isSelected ? '#60a5fa' : '#bfdbfe', borderRadius: '4px 4px 0 0', transition: 'all 0.2s' }}
                                   title={`${d.year} ${d.month} | ${d.count}건\n사고액: ₩${d.occurRaw.toLocaleString()}`}
                                 />
                                 <div
-                                  style={{ width: '35%', height: `${Math.max(2, d.lossPct)}%`, background: isSelected ? '#1d4ed8' : 'var(--primary)', borderRadius: '4px 4px 0 0', transition: 'all 0.2s' }}
+                                  style={{ width: '28%', height: `${Math.max(2, d.lossPct)}%`, background: isSelected ? '#1d4ed8' : 'var(--primary)', borderRadius: '4px 4px 0 0', transition: 'all 0.2s' }}
                                   title={`${d.year} ${d.month} | ${d.count}건\n손실액: ₩${d.lossRaw.toLocaleString()}`}
+                                />
+                                <div
+                                  style={{ width: '28%', height: `${Math.max(2, d.noClaimPct)}%`, background: isSelected ? '#059669' : '#a7f3d0', borderRadius: '4px 4px 0 0', transition: 'all 0.2s' }}
+                                  title={`${d.year} ${d.month}\n클레임 없음: ₩${d.noClaimRaw.toLocaleString()}`}
                                 />
                               </div>
                               <div style={{ position: 'absolute', bottom: '-22px', fontSize: '0.7rem', color: isSelected ? 'var(--primary)' : 'var(--text-muted)', fontWeight: isSelected ? 800 : 600, whiteSpace: 'nowrap' }}>
@@ -2846,7 +2988,7 @@ export default function Home() {
                               ) : '-'}
                             </td>
                             <td style={{ padding: '10px 16px', textAlign: 'center' }}>
-                              <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700, background: r.완료보고 === '완료' ? '#dcfce7' : '#fef9c3', color: r.완료보고 === '완료' ? '#166534' : '#854d0e' }}>
+                              <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700, background: r.완료보고?.startsWith('완료') ? '#dcfce7' : '#fef9c3', color: r.완료보고?.startsWith('완료') ? '#166534' : '#854d0e' }}>
                                 {r.완료보고 || '미완료'}
                               </span>
                             </td>
