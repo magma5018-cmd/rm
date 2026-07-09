@@ -3418,7 +3418,7 @@ export default function Home() {
                             <div style={{ flex: 1, minWidth: 0 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px', flexWrap: 'wrap' }}>
                                 <span style={{ fontWeight: 700, color: 'var(--primary)', fontSize: '0.88rem' }}>{r.사고번호}</span>
-                                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text)' }}>{r.사고명 || '-'}</span>
+                                <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text)' }}>{r.사고명 || '-'}</span>
                               </div>
                               <div style={{ display: 'flex', gap: '14px', fontSize: '0.76rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                                 <span>📅 {r.사고일}</span>
@@ -3499,15 +3499,16 @@ export default function Home() {
                 </div>
                 <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                   {weeklyData.completedThisWeek.length > 0 ? weeklyData.completedThisWeek.map((r, i) => (
-                    <div key={i} style={{ borderBottom: '1px solid var(--border)', background: weeklyExpandedId === `done-${r.id}` ? '#f0fdf4' : 'white', transition: 'background 0.2s' }}>
+                    <div key={i} style={{ borderBottom: '1px solid var(--border)', background: weeklyExpandedId === `done-${r.id}` ? '#f0fdf4' : (i % 2 === 0 ? 'white' : '#fafbfc'), transition: 'background 0.2s' }}>
                       <div 
                         onClick={() => setWeeklyExpandedId(weeklyExpandedId === `done-${r.id}` ? null : `done-${r.id}`)}
-                        style={{ padding: '20px 24px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+                        style={{ padding: '16px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '14px', transition: 'background 0.2s' }}
                       >
-                        <div style={{ flex: 1 }}>
+                        <span style={{ fontSize: '0.8rem', color: weeklyExpandedId === `done-${r.id}` ? '#10b981' : '#64748b', transition: 'transform 0.2s', transform: weeklyExpandedId === `done-${r.id}` ? 'rotate(90deg)' : 'rotate(0deg)', display: 'inline-block', fontWeight: 700 }}>▶</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                             <span style={{ background: '#f1f5f9', padding: '3px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800, color: '#475569', border: '1px solid #e2e8f0' }}>{r.사고번호 || '번호미상'}</span>
-                            <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)' }}>{r.사고명}</span>
+                            <span style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)' }}>{r.사고명}</span>
                           </div>
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                             <span>📅 <b>발생일:</b> {r.사고일 || '날짜미상'}</span>
@@ -3581,7 +3582,7 @@ export default function Home() {
                               {r.alert.label} · {r.alert.days}일
                             </div>
                           </div>
-                          <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: '5px', lineHeight: 1.4 }}>{r.사고명 || '-'}</div>
+                          <div style={{ fontSize: '0.9rem', fontWeight: 700, marginBottom: '5px', lineHeight: 1.4 }}>{r.사고명 || '-'}</div>
                           <div style={{ display: 'flex', gap: '12px', fontSize: '0.74rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
                             <span>📅 {r.사고일}</span>
                             <span>{r.부서 || r.사업부 || '-'}</span>
