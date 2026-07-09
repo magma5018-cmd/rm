@@ -42,7 +42,26 @@ const HEADERS = [
   '과실 책임 주체',
   '사고 원인 분류',
   '상세 사고 경위',
-  '드라이브URL'
+  '드라이브URL',
+  '인명 피해 여부',
+  '재해자 성명',
+  '재해자 성별',
+  '재해자 나이',
+  '재해자 국적',
+  '재해자 소속',
+  '재해자 근무형태',
+  '재해자 고용형태',
+  '재해자 직종',
+  '상해부위',
+  '상해종류',
+  '상해정도',
+  '물적 자산명',
+  '물적 손상원인',
+  '물적 피해비용',
+  '사고 심각도',
+  '사고 발생가능성',
+  '사고 위험등급',
+  '인명 피해 상세 내용'
 ];
 
 export async function POST(request) {
@@ -94,7 +113,7 @@ export async function POST(request) {
         // 완전히 비어있을 때는 첫 행에 헤더 업데이트
         await sheets.spreadsheets.values.update({
           spreadsheetId: sheetId,
-          range: `${SHEET_NAME}!A1:AZ1`,
+          range: `${SHEET_NAME}!A1:BZ1`,
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: [HEADERS],
@@ -123,7 +142,7 @@ export async function POST(request) {
 
         await sheets.spreadsheets.values.update({
           spreadsheetId: sheetId,
-          range: `${SHEET_NAME}!A1:AZ1`,
+          range: `${SHEET_NAME}!A1:BZ1`,
           valueInputOption: 'USER_ENTERED',
           requestBody: {
             values: [HEADERS],
@@ -195,14 +214,33 @@ export async function POST(request) {
       body.faultParty || '',              // 36. 과실 책임 주체 (A-14, B-7)
       body.causeClassification || '',     // 37. 사고 원인 분류 (A-15, B-9)
       body.qDetails || '',                // 38. 상세 사고 경위 (Q19)
-      body.driveUrl || ''                 // 39. 드라이브URL (Q20)
+      body.driveUrl || '',                // 39. 드라이브URL (Q20)
+      body.qHumanInjury || 'N',
+      body.qInjuryName || '',
+      body.qInjuryGender || '',
+      body.qInjuryAge || '',
+      body.qInjuryNationality || '',
+      body.qInjuryAffiliation || '',
+      body.qInjuryWorkType || '',
+      body.qInjuryEmployType || '',
+      body.qInjuryJob || '',
+      body.qInjuryPart || '',
+      body.qInjuryType || '',
+      body.qInjurySeverity || '',
+      body.qPropertyAsset || '',
+      body.qPropertyCause || '',
+      body.qPropertyCost || '',
+      body.qRiskSeverity || '',
+      body.qRiskProbability || '',
+      body.qRiskRating || '',
+      body.qHumanInjuryDetails || ''
     ];
 
     // 5. 시트에 데이터 추가 또는 업데이트
     if (isUpdate && rowNumber !== -1) {
       await sheets.spreadsheets.values.update({
         spreadsheetId: sheetId,
-        range: `${SHEET_NAME}!A${rowNumber}:AZ${rowNumber}`,
+        range: `${SHEET_NAME}!A${rowNumber}:BZ${rowNumber}`,
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values: [rowData],

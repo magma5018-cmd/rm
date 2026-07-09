@@ -12,7 +12,7 @@ export async function GET() {
     // 두 시트의 데이터를 동시에 가져옴
     const response = await sheets.spreadsheets.values.batchGet({
       spreadsheetId: sheetId,
-      ranges: [`${ACCIDENT_SHEET}!A1:AZ1000`, `${INSURANCE_SHEET}!A2:AE1000`],
+      ranges: [`${ACCIDENT_SHEET}!A1:BZ1000`, `${INSURANCE_SHEET}!A2:AE1000`],
     });
 
     const accidentDataRaw = response.data.valueRanges[0].values || [];
@@ -100,6 +100,27 @@ export async function GET() {
         보험금:       getAccVal(row, '보험금'),
         fileCount:    parseInt(getAccVal(row, '파일수') || '0'),
         driveUrl:     getAccVal(row, '드라이브URL') || null,
+        
+        // 인명/물적 피해 상세 데이터
+        '인명 피해 여부': getAccVal(row, '인명 피해 여부') || 'N',
+        '재해자 성명':    getAccVal(row, '재해자 성명'),
+        '재해자 성별':    getAccVal(row, '재해자 성별'),
+        '재해자 나이':    getAccVal(row, '재해자 나이'),
+        '재해자 국적':    getAccVal(row, '재해자 국적'),
+        '재해자 소속':    getAccVal(row, '재해자 소속'),
+        '재해자 근무형태': getAccVal(row, '재해자 근무형태'),
+        '재해자 고용형태': getAccVal(row, '재해자 고용형태'),
+        '재해자 직종':    getAccVal(row, '재해자 직종'),
+        '상해부위':       getAccVal(row, '상해부위'),
+        '상해종류':       getAccVal(row, '상해종류'),
+        '상해정도':       getAccVal(row, '상해정도'),
+        '물적 자산명':    getAccVal(row, '물적 자산명'),
+        '물적 손상원인':  getAccVal(row, '물적 손상원인'),
+        '물적 피해비용':  getAccVal(row, '물적 피해비용'),
+        '사고 심각도':    getAccVal(row, '사고 심각도'),
+        '사고 발생가능성': getAccVal(row, '사고 발생가능성'),
+        '사고 위험등급':  getAccVal(row, '사고 위험등급'),
+        '인명 피해 상세 내용': getAccVal(row, '인명 피해 상세 내용'),
       };
     });
 
@@ -202,7 +223,26 @@ export async function POST(request) {
       '완료보고', '완료보고일', '완료방법',
       '보험접수', '접수일', '보험사', '접수보험',
       '사건번호', '증권번호', '보험보상여부', '보험보상유형', '보험금',
-      '파일수', '드라이브URL'
+      '파일수', '드라이브URL',
+      '인명 피해 여부',
+      '재해자 성명',
+      '재해자 성별',
+      '재해자 나이',
+      '재해자 국적',
+      '재해자 소속',
+      '재해자 근무형태',
+      '재해자 고용형태',
+      '재해자 직종',
+      '상해부위',
+      '상해종류',
+      '상해정도',
+      '물적 자산명',
+      '물적 손상원인',
+      '물적 피해비용',
+      '사고 심각도',
+      '사고 발생가능성',
+      '사고 위험등급',
+      '인명 피해 상세 내용'
     ];
 
     const insuranceHeaders = [
@@ -220,7 +260,26 @@ export async function POST(request) {
       r.완료보고, r['완료보고일'] || '', r.완료방법,
       r.보험접수, r.접수일, r.보험사, r.접수보험,
       r.사건번호, r.증권번호, r.보험보상여부, r.보험보상유형, r.보험금,
-      r.fileCount, r.driveUrl
+      r.fileCount, r.driveUrl,
+      r['인명 피해 여부'] || 'N',
+      r['재해자 성명'] || '',
+      r['재해자 성별'] || '',
+      r['재해자 나이'] || '',
+      r['재해자 국적'] || '',
+      r['재해자 소속'] || '',
+      r['재해자 근무형태'] || '',
+      r['재해자 고용형태'] || '',
+      r['재해자 직종'] || '',
+      r['상해부위'] || '',
+      r['상해종류'] || '',
+      r['상해정도'] || '',
+      r['물적 자산명'] || '',
+      r['물적 손상원인'] || '',
+      r['물적 피해비용'] || '',
+      r['사고 심각도'] || '',
+      r['사고 발생가능성'] || '',
+      r['사고 위험등급'] || '',
+      r['인명 피해 상세 내용'] || ''
     ]);
 
     // 보험 데이터 변환
@@ -231,9 +290,10 @@ export async function POST(request) {
     ]);
 
     // 시트 초기화 (기존 데이터가 남아있는 현상 방지)
+    const accMaxCol = googleColumnName(accidentHeaders.length);
     await sheets.spreadsheets.values.clear({
       spreadsheetId: sheetId,
-      range: `${ACCIDENT_SHEET}!A2:AJ1000`,
+      range: `${ACCIDENT_SHEET}!A2:${accMaxCol}1000`,
     });
     await sheets.spreadsheets.values.clear({
       spreadsheetId: sheetId,
@@ -246,8 +306,8 @@ export async function POST(request) {
       requestBody: {
         valueInputOption: 'USER_ENTERED',
         data: [
-          { range: `${ACCIDENT_SHEET}!A1:AJ1`, values: [accidentHeaders] },
-          { range: `${ACCIDENT_SHEET}!A2:AJ${accidentValues.length + 1}`, values: accidentValues },
+          { range: `${ACCIDENT_SHEET}!A1:${accMaxCol}1`, values: [accidentHeaders] },
+          { range: `${ACCIDENT_SHEET}!A2:${accMaxCol}${accidentValues.length + 1}`, values: accidentValues },
           { range: `${INSURANCE_SHEET}!A1:Q1`, values: [insuranceHeaders] },
           { range: `${INSURANCE_SHEET}!A2:Q${insuranceValues.length + 1}`, values: insuranceValues },
         ],
@@ -259,4 +319,15 @@ export async function POST(request) {
     console.error('Error saving data to Sheets:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+}
+
+// 컬럼 인덱스를 A, B, C... Z, AA 형태로 변환하는 유틸리티
+function googleColumnName(num) {
+  let name = '';
+  while (num > 0) {
+    let temp = (num - 1) % 26;
+    name = String.fromCharCode(65 + temp) + name;
+    num = (num - temp - 1) / 26;
+  }
+  return name;
 }
