@@ -3425,7 +3425,7 @@ export default function Home() {
                     color: '#f59e0b', 
                     bg: '#fffbeb',
                     extra: [
-                      { label: '클레임 금액 총액', value: `₩${weeklyData.inProgressAmount.toLocaleString()}` }
+                      { label: '총 사고액', value: `₩${weeklyData.inProgressAmount.toLocaleString()}` }
                     ]
                   },
                   { 
