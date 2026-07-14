@@ -3445,20 +3445,20 @@ export default function Home() {
                       : undefined
                   },
                 ].map((c, i) => (
-                  <div key={i} className="panel" style={{ padding: '18px 20px', borderLeft: `4px solid ${c.color}`, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                      <span style={{ fontSize: '1.1rem' }}>{c.icon}</span>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-muted)' }}>{c.label}</span>
+                  <div key={i} className="panel" style={{ padding: '12px 16px', borderLeft: `4px solid ${c.color}`, display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '1px' }}>
+                      <span style={{ fontSize: '1rem' }}>{c.icon}</span>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--text-muted)' }}>{c.label}</span>
                     </div>
-                    <div style={{ fontSize: '0.68rem', color: '#94a3b8', fontWeight: 500, marginLeft: '2px' }}>{c.desc}</div>
-                    <div style={{ marginTop: '10px', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                      <span style={{ fontSize: '1.6rem', fontWeight: 800, color: c.color }}>{c.value}</span>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>{c.unit}</span>
+                    <div style={{ fontSize: '0.66rem', color: '#94a3b8', fontWeight: 500, marginLeft: '2px' }}>{c.desc}</div>
+                    <div style={{ marginTop: '6px', display: 'flex', alignItems: 'baseline', gap: '3px' }}>
+                      <span style={{ fontSize: '1.45rem', fontWeight: 800, color: c.color }}>{c.value}</span>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{c.unit}</span>
                     </div>
                     {c.extra && c.extra.map((ex, exi) => (
-                      <div key={exi} style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '6px', display: 'flex', justifyContent: 'space-between', borderTop: exi === 0 ? '1px dashed var(--border)' : 'none', paddingTop: exi === 0 ? '6px' : '0px' }}>
-                        <span>{ex.label}</span>
-                        <strong style={{ color: 'var(--text)' }}>{ex.value}</strong>
+                      <div key={exi} style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: exi === 0 ? '5px' : '3px', display: 'flex', justifyContent: 'space-between', borderTop: exi === 0 ? '1px dashed var(--border)' : 'none', paddingTop: exi === 0 ? '5px' : '0px', gap: '10px' }}>
+                        <span style={{ whiteSpace: 'nowrap' }}>{ex.label}</span>
+                        <strong style={{ color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }} title={ex.value}>{ex.value}</strong>
                       </div>
                     ))}
                   </div>
