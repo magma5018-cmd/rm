@@ -3427,7 +3427,23 @@ export default function Home() {
                     ]
                   },
                   { icon: '⚠️', label: '주의 필요', desc: '미접수3일/미종결14일↑', value: weeklyData.needsAttention.length, unit: '건', color: '#ef4444', bg: '#fef2f2' },
-                  { icon: '🛡️', label: '보험 갱신 필요', desc: '만기 90일 이내 보험', value: weeklyData.renewalCount, unit: '건', color: '#8b5cf6', bg: '#f5f3ff' },
+                  { 
+                    icon: '🛡️', 
+                    label: '보험 갱신 필요', 
+                    desc: '만기 90일 이내 보험', 
+                    value: weeklyData.renewalCount, 
+                    unit: '건', 
+                    color: '#8b5cf6', 
+                    bg: '#f5f3ff',
+                    extra: weeklyData.renewalCount > 0 
+                      ? weeklyData.insuranceRenewals
+                          .filter(r => r.daysLeft <= 90 && r.daysLeft >= 0)
+                          .map(r => ({
+                            label: r.구분 ? `[${r.구분}]` : '-',
+                            value: r.보험명 || '-'
+                          }))
+                      : undefined
+                  },
                 ].map((c, i) => (
                   <div key={i} className="panel" style={{ padding: '18px 20px', borderLeft: `4px solid ${c.color}`, display: 'flex', flexDirection: 'column', gap: '2px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
