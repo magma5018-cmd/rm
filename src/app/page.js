@@ -1366,7 +1366,9 @@ export default function Home() {
     let totalNoClaimCount = 0;
 
     targetRows.forEach(r => {
-      const isNoClaim = r.완료보고 === '완료 (클레임 없음)';
+      const reportStatus = r.완료보고 || '';
+      const method = r.완료방법 || '';
+      const isNoClaim = reportStatus.includes('클레임 없음') || method.includes('면책') || method.includes('무이의') || method.includes('무의이');
       const occur = parseAmount(r.사고액);
       const comp = isNoClaim ? 0 : parseAmount(r.배상액);
       const recov = isNoClaim ? 0 : parseAmount(r.회수액);
