@@ -1464,6 +1464,27 @@ export default function Home() {
         const dept = r.부서 || r.사업부 || '소속 미상';
         return dept === drillFilter.value;
       }
+      if (drillFilter.type === 'card') {
+        const reportStatus = r.완료보고 || '';
+        const method = r.완료방법 || '';
+        const isNoClaim = reportStatus.includes('클레임 없음') || method.includes('면책') || method.includes('무이의') || method.includes('무의이');
+        
+        if (drillFilter.value === 'all') {
+          return true;
+        }
+        if (drillFilter.value === 'noClaim') {
+          return isNoClaim;
+        }
+        if (drillFilter.value === 'claimTarget') {
+          return !isNoClaim;
+        }
+        if (drillFilter.value === 'loss') {
+          const loss = isNoClaim ? 0 : parseAmount(r.손실액);
+          const comp = isNoClaim ? 0 : parseAmount(r.배상액);
+          const recov = isNoClaim ? 0 : parseAmount(r.회수액);
+          return loss > 0 || comp > 0 || recov > 0;
+        }
+      }
       return false;
     });
   }, [rows, drillFilter, dashStartDate, dashEndDate]);
@@ -3103,7 +3124,21 @@ export default function Home() {
               {/* 통계 카드 */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
                 {/* 1. 전체 사고 현황 */}
-                <div className="panel" style={{ padding: '20px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div 
+                  className="panel" 
+                  onClick={() => toggleDrill('card', 'all')}
+                  style={{ 
+                    padding: '20px', 
+                    border: (drillFilter?.type === 'card' && drillFilter?.value === 'all') ? '2px solid var(--primary)' : '1px solid var(--border)', 
+                    boxShadow: (drillFilter?.type === 'card' && drillFilter?.value === 'all') ? '0 8px 24px rgba(37,99,235,0.12)' : 'none',
+                    transform: (drillFilter?.type === 'card' && drillFilter?.value === 'all') ? 'translateY(-4px)' : 'none',
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'all 0.25s ease-in-out'
+                  }}
+                >
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span>📊</span> 전체 사고 현황
                   </div>
@@ -3120,7 +3155,21 @@ export default function Home() {
                 </div>
 
                 {/* 2. 클레임 없음 */}
-                <div className="panel" style={{ padding: '20px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div 
+                  className="panel" 
+                  onClick={() => toggleDrill('card', 'noClaim')}
+                  style={{ 
+                    padding: '20px', 
+                    border: (drillFilter?.type === 'card' && drillFilter?.value === 'noClaim') ? '2px solid #10b981' : '1px solid var(--border)', 
+                    boxShadow: (drillFilter?.type === 'card' && drillFilter?.value === 'noClaim') ? '0 8px 24px rgba(16,185,129,0.12)' : 'none',
+                    transform: (drillFilter?.type === 'card' && drillFilter?.value === 'noClaim') ? 'translateY(-4px)' : 'none',
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'all 0.25s ease-in-out'
+                  }}
+                >
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ color: '#10b981' }}>✅</span> 클레임 없음 (면책/무이의)
                   </div>
@@ -3137,7 +3186,21 @@ export default function Home() {
                 </div>
 
                 {/* 3. 클레임 대상 (잔액) */}
-                <div className="panel" style={{ padding: '20px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div 
+                  className="panel" 
+                  onClick={() => toggleDrill('card', 'claimTarget')}
+                  style={{ 
+                    padding: '20px', 
+                    border: (drillFilter?.type === 'card' && drillFilter?.value === 'claimTarget') ? '2px solid #f59e0b' : '1px solid var(--border)', 
+                    boxShadow: (drillFilter?.type === 'card' && drillFilter?.value === 'claimTarget') ? '0 8px 24px rgba(245,158,11,0.12)' : 'none',
+                    transform: (drillFilter?.type === 'card' && drillFilter?.value === 'claimTarget') ? 'translateY(-4px)' : 'none',
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'all 0.25s ease-in-out'
+                  }}
+                >
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ color: '#f59e0b' }}>🔄</span> 클레임 대상 (잔액)
                   </div>
@@ -3154,7 +3217,21 @@ export default function Home() {
                 </div>
 
                 {/* 4. 배상 및 순 손실 */}
-                <div className="panel" style={{ padding: '20px', border: '2px solid #fee2e2', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div 
+                  className="panel" 
+                  onClick={() => toggleDrill('card', 'loss')}
+                  style={{ 
+                    padding: '20px', 
+                    border: (drillFilter?.type === 'card' && drillFilter?.value === 'loss') ? '2px solid #ef4444' : '2px solid #fee2e2', 
+                    boxShadow: (drillFilter?.type === 'card' && drillFilter?.value === 'loss') ? '0 8px 24px rgba(239,68,68,0.12)' : 'none',
+                    transform: (drillFilter?.type === 'card' && drillFilter?.value === 'loss') ? 'translateY(-4px)' : 'none',
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'all 0.25s ease-in-out'
+                  }}
+                >
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ color: '#ef4444' }}>🚨</span> 배상 및 순 손실
                   </div>
@@ -3369,10 +3446,22 @@ export default function Home() {
                 <div className="panel" style={{ padding: '0', overflow: 'hidden', border: '2px solid var(--primary)', animation: 'fadeIn 0.25s ease' }}>
                   <div style={{ padding: '20px 24px', background: 'var(--primary)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ fontSize: '1.1rem' }}>{drillFilter.type === 'month' ? '📊' : '🏢'}</span>
+                      <span style={{ fontSize: '1.1rem' }}>
+                        {drillFilter.type === 'month' ? '📊' : drillFilter.type === 'dept' ? '🏢' : (drillFilter.value === 'all' ? '📊' : drillFilter.value === 'noClaim' ? '✅' : drillFilter.value === 'claimTarget' ? '🔄' : '🚨')}
+                      </span>
                       <div>
                         <div style={{ fontWeight: 800, fontSize: '1rem' }}>
-                          {drillFilter.type === 'month' ? `${drillFilter.value.split('-')[0]}년 ${parseInt(drillFilter.value.split('-')[1])}월` : drillFilter.value} 사고 상세
+                          {drillFilter.type === 'month' 
+                            ? `${drillFilter.value.split('-')[0]}년 ${parseInt(drillFilter.value.split('-')[1])}월 사고 상세` 
+                            : drillFilter.type === 'dept' 
+                              ? `${drillFilter.value} 사고 상세` 
+                              : (drillFilter.value === 'all' 
+                                ? '전체 사고 현황 상세' 
+                                : drillFilter.value === 'noClaim' 
+                                  ? '클레임 없음 (면책/무이의) 사고 상세' 
+                                  : drillFilter.value === 'claimTarget' 
+                                    ? '클레임 대상 (잔액) 사고 상세' 
+                                    : '배상 및 순 손실 사고 상세')}
                         </div>
                         <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>총 {drillRows.length}건</div>
                       </div>
