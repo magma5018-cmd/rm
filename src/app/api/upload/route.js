@@ -137,7 +137,17 @@ export async function POST(request) {
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
+      let result;
+      const scriptContentType = response.headers.get('content-type');
+      if (scriptContentType && scriptContentType.includes('application/json')) {
+        result = await response.json();
+      } else {
+        const errorHtml = await response.text();
+        const cleanHtml = errorHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        console.error('Apps Script HTML Error Response:', cleanHtml);
+        throw new Error(`구글 스크립트 에러 (HTML):\n${cleanHtml.substring(0, 200)}...`);
+      }
+
       if (!result.success) throw new Error(result.error || 'Upload failed');
       
       // 폴더 주소 확보 (우선순위: folderUrl > driveUrl > url)

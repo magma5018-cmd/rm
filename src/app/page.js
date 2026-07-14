@@ -1024,6 +1024,17 @@ export default function Home() {
     const targetId = uploadTarget; // 비동기 중 closure 안전하게 캡처
     setIsLoading(true);
 
+    // 용량 제한 검사 (단일 파일 최대 30MB 제한 = 30 * 1024 * 1024 bytes)
+    const MAX_FILE_SIZE = 30 * 1024 * 1024;
+    const oversizedFile = files.find(f => f.size > MAX_FILE_SIZE);
+    if (oversizedFile) {
+      alert(`파일 크기가 너무 큽니다: ${oversizedFile.name}\n(단일 파일은 최대 30MB 이하만 업로드 가능합니다.)`);
+      setIsLoading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setUploadTarget(null);
+      return;
+    }
+
     const row = rows.find(r => r.id === targetId);
     if (!row) { setIsLoading(false); return; }
 
@@ -1036,7 +1047,17 @@ export default function Home() {
 
     try {
       const res = await fetch('/api/upload', { method: 'POST', body: formData });
-      const data = await res.json();
+      
+      let data = {};
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const errorText = await res.text();
+        // HTML 태그를 지우고 안쪽 텍스트만 추출하여 진짜 에러 메시지 확보
+        const cleanText = errorText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        throw new Error(`서버 응답 오류 (HTML):\n${cleanText.substring(0, 300)}...`);
+      }
 
       if (!res.ok || !data.success) {
         throw new Error(data.error || `서버 오류 (${res.status})`);
@@ -1093,6 +1114,17 @@ export default function Home() {
 
     setIsLoading(true);
 
+    // 용량 제한 검사 (단일 파일 최대 30MB 제한 = 30 * 1024 * 1024 bytes)
+    const MAX_FILE_SIZE = 30 * 1024 * 1024;
+    const oversizedFile = files.find(f => f.size > MAX_FILE_SIZE);
+    if (oversizedFile) {
+      alert(`파일 크기가 너무 큽니다: ${oversizedFile.name}\n(단일 파일은 최대 30MB 이하만 업로드 가능합니다.)`);
+      setIsLoading(false);
+      if (insFileInputRef.current) insFileInputRef.current.value = '';
+      setInsUploadTarget(null);
+      return;
+    }
+
     const row = insRows.find(r => r.id === insUploadTarget);
     const startStr = (row['보험 시작일'] || '').replace(/-/g, '');
     const endStr = (row['보험 종료일'] || '').replace(/-/g, '');
@@ -1109,7 +1141,16 @@ export default function Home() {
         method: 'POST',
         body: formData,
       });
-      const data = await res.json();
+      
+      let data = {};
+      const contentType = res.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json();
+      } else {
+        const errorText = await res.text();
+        const cleanText = errorText.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        throw new Error(`서버 응답 오류 (HTML):\n${cleanText.substring(0, 300)}...`);
+      }
 
       if (data.success) {
         const firstFileUrl = data.files[0]?.url;
@@ -3445,7 +3486,6 @@ export default function Home() {
                                   { label: '귀책사', value: `${r.귀책사구분 || ''}${r.귀책사 ? ` ${r.귀책사}` : ''}` || '-' },
                                   { label: '실화주', value: r.실화주 || '-' },
                                   { label: '고객사', value: r.고객사 || '-' },
-                                  { label: '사고명', value: r.사고명 || '-' },
                                   { label: '사고액', value: r.사고액 ? `₩${Number(String(r.사고액).replace(/[^0-9]/g, '')).toLocaleString()}` : '-' },
                                   { label: '손실액', value: r.손실액 ? `₩${Number(String(r.손실액).replace(/[^0-9]/g, '')).toLocaleString()}` : '-' },
                                   { label: '대표이사 보고사항', value: r['대표이사 보고사항'] || '-' },
