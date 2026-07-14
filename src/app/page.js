@@ -31,10 +31,10 @@ const fmtAxisVal = (v) => {
 // ── 빈 사고 행 템플릿 ──
 const COLUMN_TOOLTIPS = {
   '사고액': '사고로 인해 발생한 총 피해 규모 (원가 기준 총액)',
-  '배상액': '보험사 또는 귀책처로부터 구상하여 돌려받을 금액',
-  '회수액': '파손 화물 처분 등을 통해 자체적으로 회수한 금액',
-  '자기부담금': '보험 처리 시 당사가 부담해야 하는 공제 금액',
-  '손실액': '당사가 최종 부담하는 순 손실액 (사고액 - 배상액 - 회수액 + 자기부담금)'
+  '배상액': '고객사(화주)에게 실제 지급했거나 지급할 배상 금액',
+  '회수액': '보험금, 구상금, 잔존물 매각 등을 통해 회수한 총 금액',
+  '자기부담금': '보험 처리 시 당사가 부담해야 하는 공제 금액 (참고용)',
+  '손실액': '당사가 최종 부담하는 순 손실액 (배상액 - 회수액)'
 };
 
 const emptyRow = () => {
@@ -775,12 +775,13 @@ export default function Home() {
     // 사고 내용
     '사고번호': 110, '사고일': 110, '사고접수일': 110, '가이드제공일': 110, '사업부': 90, '부서': 90, '담당자': 80,
     '실화주': 90, '고객사': 90, '귀책사': 100, '사고명': 120,
-    '사고내용': 200, '대표이사 보고사항': 110, '대표이사 보고일': 110, '사고액': 100, '배상액': 100, '회수액': 80,
-    '손실액': 90, '완료보고': 80, '완료방법': 120,
+    '사고내용': 200, '대표이사 보고사항': 110, '대표이사 보고일': 110,
+    '사고금액(텍스트)': 130, '사고액': 130, '배상액': 130, '회수액': 120,
+    '손실액': 120, '완료보고': 130, '완료보고일': 110, '완료방법': 140,
     // 보험 접수
     '보험접수': 80, '접수일': 110, '보험사': 90, '접수보험': 90,
-    '사건번호': 100, '증권번호': 100, '자기부담금': 100,
-    '보험보상여부': 90, '보험보상유형': 90, '보험금': 100,
+    '사건번호': 100, '증권번호': 100, '자기부담금': 120,
+    '보험보상여부': 90, '보험보상유형': 90, '보험금': 120,
     // 처리경과 / 첨부파일
     '처리경과': 220, '체크행': 40, '첨부파일': 120,
     // 전사 보험가입 현황 전용
@@ -834,6 +835,16 @@ export default function Home() {
     maxWidth: colWidths[col] || 9999,
     overflow: 'hidden',
     userSelect: 'none',
+    ...extra,
+  });
+
+  const tdStyle = (col, extra = {}) => ({
+    verticalAlign: 'middle',
+    width: colWidths[col] || 90,
+    minWidth: colWidths[col] || 60,
+    maxWidth: colWidths[col] || 9999,
+    overflow: 'hidden',
+    position: LONG_TEXT.has(col) ? 'relative' : 'static',
     ...extra,
   });
 
@@ -901,8 +912,9 @@ export default function Home() {
             const occur = parseAmount(updated['사고액']);
             const comp = parseAmount(updated['배상액']);
             const recov = parseAmount(updated['회수액']);
-            const deduct = parseAmount(updated['자기부담금']);
-            const calcLoss = occur - comp - recov + deduct;
+            // 배상액이 입력되었으면 배상액을 기준으로 계산하고, 없으면 사고액을 기준으로 계산합니다.
+            const baseAmount = comp > 0 ? comp : occur;
+            const calcLoss = baseAmount - recov;
             updated['손실액'] = calcLoss.toLocaleString();
           }
         }
@@ -1327,6 +1339,7 @@ export default function Home() {
 
     const totalCount = targetRows.length;
     let totalOccur = 0;
+    let totalComp = 0;
     let totalRecov = 0;
     let totalLoss = 0;
 
@@ -1355,10 +1368,12 @@ export default function Home() {
     targetRows.forEach(r => {
       const isNoClaim = r.완료보고 === '완료 (클레임 없음)';
       const occur = parseAmount(r.사고액);
-      const recov = isNoClaim ? 0 : (parseAmount(r.배상액) + parseAmount(r.회수액));
+      const comp = isNoClaim ? 0 : parseAmount(r.배상액);
+      const recov = isNoClaim ? 0 : parseAmount(r.회수액);
       const loss = isNoClaim ? 0 : parseAmount(r.손실액);
 
       totalOccur += occur;
+      totalComp += comp;
       totalRecov += recov;
       totalLoss += loss;
 
@@ -1419,6 +1434,7 @@ export default function Home() {
     return {
       totalCount,
       totalOccur,
+      totalComp,
       totalRecov,
       totalLoss,
       totalNoClaimOccur,
@@ -2924,7 +2940,7 @@ export default function Home() {
                         </td>
                         {/* 사고내용 인라인 (앞부분 0-11) */}
                         {COLS_ACCIDENT.slice(0, 12).map((col, cIdx) => (
-                          <td key={col} style={{ verticalAlign: 'middle', minWidth: '90px', position: LONG_TEXT.has(col) ? 'relative' : 'static' }}>
+                          <td key={col} style={tdStyle(col)}>
                             {DATE_FIELDS.has(col) ? (
                               <input data-table="acc" data-row={rIdx} data-col={cIdx} className="cell-input" type="date" defaultValue={row[col] || ''} onChange={e => updateCell(row.id, col, e.target.value)} style={{ minWidth: '110px' }} />
                             ) : LONG_TEXT.has(col) ? (
@@ -2942,7 +2958,7 @@ export default function Home() {
                         ))}
 
                         {/* 진행경과 – 컴팩트 (인덱스 12) */}
-                        <td style={{ background: '#fdfaf6', minWidth: '200px', position: 'relative' }}>
+                        <td style={tdStyle('처리경과', { background: '#fdfaf6' })}>
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: '4px' }}>
                             <div
                               className="cell-progress-text"
@@ -2962,7 +2978,7 @@ export default function Home() {
 
                         {/* 사고내용 인라인 (뒷부분 12-18 -> data-col 13-19) */}
                         {COLS_ACCIDENT.slice(12).map((col, cIdx) => (
-                          <td key={col} style={{ verticalAlign: 'middle', minWidth: '90px', position: LONG_TEXT.has(col) ? 'relative' : 'static' }}>
+                          <td key={col} style={tdStyle(col)}>
                             {col === '대표이사 보고사항' ? (
                               <select data-table="acc" data-row={rIdx} data-col={13 + cIdx} className="cell-select" value={row[col] || ''} onChange={e => updateCell(row.id, col, e.target.value)} style={{ minWidth: '80px' }}>
                                 <option value="">-</option>
@@ -2991,7 +3007,7 @@ export default function Home() {
                         ))}
 
                         {/* 완료보고 (data-col 20) */}
-                        <td style={{ verticalAlign: 'middle', minWidth: '90px' }}>
+                        <td style={tdStyle('완료보고')}>
                           <select data-table="acc" data-row={rIdx} data-col={20} className="cell-select" value={row['완료보고'] || '미완료'} onChange={e => {
                             const val = e.target.value;
                             updateCell(row.id, '완료보고', val);
@@ -3005,16 +3021,16 @@ export default function Home() {
                           </select>
                         </td>
                         {/* 완료보고일 (data-col 21) */}
-                        <td style={{ verticalAlign: 'middle', minWidth: '110px' }}>
+                        <td style={tdStyle('완료보고일')}>
                           <input data-table="acc" data-row={rIdx} data-col={21} className="cell-input" type="date" defaultValue={row['완료보고일'] || ''} onChange={e => updateCell(row.id, '완료보고일', e.target.value)} style={{ minWidth: '110px' }} />
                         </td>
                         {/* 완료방법 (data-col 22) */}
-                        <td style={{ verticalAlign: 'middle', minWidth: '120px' }}>
+                        <td style={tdStyle('완료방법')}>
                           <input data-table="acc" data-row={rIdx} data-col={22} className="cell-input" defaultValue={row['완료방법'] || ''} onBlur={e => { if (e.target.value !== (row['완료방법'] || '')) updateCell(row.id, '완료방법', e.target.value); }} placeholder="완료방법 입력" />
                         </td>
                         {/* 보험 인라인 (data-col 23+) */}
                         {COLS_INSURANCE.map((col, iIdx) => (
-                          <td key={col} style={{ verticalAlign: 'middle' }}>
+                          <td key={col} style={tdStyle(col)}>
                             {col === '보험접수' ? (
                               <select data-table="acc" data-row={rIdx} data-col={23 + iIdx} className="cell-select" value={row[col] || 'N'} onChange={e => updateCell(row.id, col, e.target.value)}>
                                 <option>Y</option><option>N</option>
@@ -3098,21 +3114,21 @@ export default function Home() {
                     color: 'var(--text)' 
                   },
                   { 
-                    label: '클레임 면책(없음) 합계', 
-                    value: `₩ ${dashboardStats.totalNoClaimOccur.toLocaleString()}`, 
-                    sub: `면책/무이의 종결 ${dashboardStats.totalNoClaimCount}건`, 
-                    color: '#10b981' 
+                    label: '총 배상 지급액 합계', 
+                    value: `₩ ${dashboardStats.totalComp.toLocaleString()}`, 
+                    sub: '대고객사 배상 지급 누계', 
+                    color: '#ef4444' 
                   },
                   { 
-                    label: '보험 보상 및 회수액', 
+                    label: '총 회수액 합계', 
                     value: `₩ ${dashboardStats.totalRecov.toLocaleString()}`, 
-                    sub: '보상+배상+회수', 
-                    color: 'var(--text)' 
+                    sub: '보험금 및 구상/잔존 회수 누계', 
+                    color: '#10b981' 
                   },
                   { 
                     label: '회사 순 손실액 합계', 
                     value: `₩ ${dashboardStats.totalLoss.toLocaleString()}`, 
-                    sub: '최종 손실 누계', 
+                    sub: '최종 손실 누계 (배상액 - 회수액)', 
                     color: '#ef4444', 
                     highlight: true 
                   }
