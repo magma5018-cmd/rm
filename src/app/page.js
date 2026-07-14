@@ -3269,7 +3269,7 @@ export default function Home() {
                   </div>
 
                   <div style={{ paddingBottom: '28px', borderBottom: '1px solid var(--border)' }}>
-                    <div style={{ display: 'flex', height: '290px' }}>
+                    <div style={{ display: 'flex', height: '380px' }}>
                       {/* 왼쪽 Y축 - 사고액 */}
                       <div style={{ width: '58px', flexShrink: 0, display: 'flex', flexDirection: 'column', paddingRight: '6px' }}>
                         <div style={{ fontSize: '0.6rem', color: '#93c5fd', fontWeight: 700, textAlign: 'right', marginBottom: '4px', whiteSpace: 'nowrap' }}>사고액 (₩)</div>
