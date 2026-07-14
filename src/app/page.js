@@ -1561,6 +1561,7 @@ export default function Home() {
 
     // 사고액 및 면책 종결 추가 집계
     const newThisWeekAmount = newThisWeek.reduce((sum, r) => sum + parseAmount(r.사고액), 0);
+    const inProgressAmount = inProgress.reduce((sum, r) => sum + parseAmount(r.사고액), 0);
     const completedThisWeekAmount = completedThisWeek.reduce((sum, r) => sum + parseAmount(r.사고액), 0);
     const completedExemptCount = completedThisWeek.filter(r => {
       const reportStatus = r.완료보고 || '';
@@ -1627,6 +1628,7 @@ export default function Home() {
       we, 
       newThisWeek, 
       inProgress, 
+      inProgressAmount,
       completedThisWeek, 
       alertRows, 
       needsAttention, 
@@ -3399,7 +3401,18 @@ export default function Home() {
                       { label: '총 사고액', value: `₩${weeklyData.newThisWeekAmount.toLocaleString()}` }
                     ]
                   },
-                  { icon: '🔄', label: '진행중 (미완료)', desc: '미완료된 모든 사고', value: weeklyData.inProgress.length, unit: '건', color: '#f59e0b', bg: '#fffbeb' },
+                  { 
+                    icon: '🔄', 
+                    label: '진행중 (미완료)', 
+                    desc: '미완료된 모든 사고', 
+                    value: weeklyData.inProgress.length, 
+                    unit: '건', 
+                    color: '#f59e0b', 
+                    bg: '#fffbeb',
+                    extra: [
+                      { label: '클레임 금액 총액', value: `₩${weeklyData.inProgressAmount.toLocaleString()}` }
+                    ]
+                  },
                   { 
                     icon: '✅', 
                     label: '금주 완료 처리', 
