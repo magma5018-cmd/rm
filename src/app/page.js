@@ -3106,14 +3106,20 @@ export default function Home() {
                   { 
                     label: '접수 사고 건수', 
                     value: `${dashboardStats.totalCount} 건`, 
-                    sub: `클레임 없음: ${dashboardStats.totalNoClaimCount}건 (대상 잔액: ${dashboardStats.totalCount - dashboardStats.totalNoClaimCount}건)`, 
-                    color: 'var(--text)' 
+                    color: 'var(--text)',
+                    extra: [
+                      { label: '클레임 없음', value: `${dashboardStats.totalNoClaimCount} 건` },
+                      { label: '대상 잔액', value: `${dashboardStats.totalCount - dashboardStats.totalNoClaimCount} 건` }
+                    ]
                   },
                   { 
                     label: '총 사고 발생액 합계', 
                     value: `₩ ${dashboardStats.totalOccur.toLocaleString()}`, 
-                    sub: `클레임 없음: ₩ ${dashboardStats.totalNoClaimOccur.toLocaleString()} (대상 잔액: ₩ ${(dashboardStats.totalOccur - dashboardStats.totalNoClaimOccur).toLocaleString()})`, 
-                    color: 'var(--text)' 
+                    color: 'var(--text)',
+                    extra: [
+                      { label: '클레임 없음', value: `₩ ${dashboardStats.totalNoClaimOccur.toLocaleString()}` },
+                      { label: '대상 잔액', value: `₩ ${(dashboardStats.totalOccur - dashboardStats.totalNoClaimOccur).toLocaleString()}` }
+                    ]
                   },
                   { 
                     label: '총 배상 지급액 합계', 
@@ -3138,7 +3144,23 @@ export default function Home() {
                   <div key={i} className="panel" style={{ padding: '24px', border: s.highlight ? '2px solid #fee2e2' : '1px solid var(--border)' }}>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '12px' }}>{s.label}</div>
                     <div style={{ fontSize: '1.6rem', fontWeight: 800, color: s.color, marginBottom: '8px' }}>{s.value}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>{s.sub}</div>
+                    {s.sub && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>{s.sub}</div>}
+                    {s.extra && s.extra.map((ex, exi) => (
+                      <div key={exi} style={{ 
+                        fontSize: '0.75rem', 
+                        color: 'var(--text-muted)', 
+                        marginTop: exi === 0 ? '8px' : '4px', 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        borderTop: exi === 0 ? '1px dashed var(--border)' : 'none', 
+                        paddingTop: exi === 0 ? '8px' : '0px', 
+                        gap: '10px' 
+                      }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center' }}>{ex.label}</span>
+                        <strong style={{ color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.value}>{ex.value}</strong>
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>
