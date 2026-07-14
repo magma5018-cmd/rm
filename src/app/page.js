@@ -2974,11 +2974,16 @@ export default function Home() {
                             ) : LONG_TEXT.has(col) ? (
                               <textarea data-table="acc" data-row={rIdx} data-col={13 + cIdx} className="cell-textarea" defaultValue={row[col] || ''} ref={autoResize} onInput={e => autoResize(e.target)} onBlur={e => { if (e.target.value !== (row[col] || '')) updateCell(row.id, col, e.target.value); }} style={{ textAlign: 'left' }} title={row[col] || ''} />
                             ) : NUM_FIELDS.has(col) ? (
-                              <input data-table="acc" data-row={rIdx} data-col={13 + cIdx} className="cell-input" defaultValue={row[col] || ''} onBlur={e => {
-                                const numStr = e.target.value.replace(/[^0-9]/g, '');
-                                const formatted = numStr ? Number(numStr).toLocaleString() : '';
-                                if (formatted !== (row[col] || '')) { updateCell(row.id, col, formatted); e.target.value = formatted; }
-                              }} placeholder="0" style={{ textAlign: 'right', paddingRight: '8px' }} />
+                              <input data-table="acc" data-row={rIdx} data-col={13 + cIdx} className="cell-input" 
+                                value={col === '손실액' ? (row[col] || '0') : undefined}
+                                defaultValue={col !== '손실액' ? (row[col] || '') : undefined}
+                                readOnly={col === '손실액'}
+                                onBlur={e => {
+                                  if (col === '손실액') return;
+                                  const numStr = e.target.value.replace(/[^0-9]/g, '');
+                                  const formatted = numStr ? Number(numStr).toLocaleString() : '';
+                                  if (formatted !== (row[col] || '')) { updateCell(row.id, col, formatted); e.target.value = formatted; }
+                                }} placeholder="0" style={{ textAlign: 'right', paddingRight: '8px', backgroundColor: col === '손실액' ? '#f8fafc' : 'inherit' }} />
                             ) : (
                               <input data-table="acc" data-row={rIdx} data-col={13 + cIdx} className="cell-input" defaultValue={row[col] || ''} onBlur={e => { if (e.target.value !== (row[col] || '')) updateCell(row.id, col, e.target.value); }} />
                             )}
