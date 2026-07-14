@@ -1563,11 +1563,23 @@ export default function Home() {
     const newThisWeekAmount = newThisWeek.reduce((sum, r) => sum + parseAmount(r.사고액), 0);
     const inProgressAmount = inProgress.reduce((sum, r) => sum + parseAmount(r.사고액), 0);
     const completedThisWeekAmount = completedThisWeek.reduce((sum, r) => sum + parseAmount(r.사고액), 0);
-    const completedExemptCount = completedThisWeek.filter(r => {
+
+    const completedExemptRows = completedThisWeek.filter(r => {
       const reportStatus = r.완료보고 || '';
       const method = r.완료방법 || '';
       return reportStatus.includes('클레임 없음') || method.includes('면책') || method.includes('무이의');
-    }).length;
+    });
+    const completedExemptCount = completedExemptRows.length;
+    const completedExemptAmount = completedExemptRows.reduce((sum, r) => sum + parseAmount(r.사고액), 0);
+
+    const completedCompRows = completedThisWeek.filter(r => {
+      const reportStatus = r.완료보고 || '';
+      const method = r.완료방법 || '';
+      const isExempt = reportStatus.includes('클레임 없음') || method.includes('면책') || method.includes('무이의');
+      return !isExempt;
+    });
+    const completedCompCount = completedCompRows.length;
+    const completedCompAmount = completedCompRows.reduce((sum, r) => sum + parseAmount(r.사고액), 0);
 
     // 경고 레벨 계산
     const getAlertLevel = (r) => {
@@ -1636,7 +1648,10 @@ export default function Home() {
       renewalCount, 
       newThisWeekAmount, 
       completedThisWeekAmount, 
-      completedExemptCount 
+      completedExemptCount,
+      completedExemptAmount,
+      completedCompCount,
+      completedCompAmount
     };
   }, [rows, insRows, weekOffset]);
 
@@ -3423,7 +3438,8 @@ export default function Home() {
                     bg: '#ecfdf5',
                     extra: [
                       { label: '총 사고액', value: `₩${weeklyData.completedThisWeekAmount.toLocaleString()}` },
-                      { label: '면책/무이의', value: `${weeklyData.completedExemptCount}건` }
+                      { label: `면책/무이의 (${weeklyData.completedExemptCount}건)`, value: `₩${weeklyData.completedExemptAmount.toLocaleString()}` },
+                      { label: `배상 (${weeklyData.completedCompCount}건)`, value: `₩${weeklyData.completedCompAmount.toLocaleString()}` }
                     ]
                   },
                   { icon: '⚠️', label: '주의 필요', desc: '미접수3일/미종결14일↑', value: weeklyData.needsAttention.length, unit: '건', color: '#ef4444', bg: '#fef2f2' },
