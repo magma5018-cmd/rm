@@ -3101,68 +3101,76 @@ export default function Home() {
               </div>
 
               {/* 통계 카드 */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
-                {[
-                  { 
-                    label: '접수 사고 건수', 
-                    value: `${dashboardStats.totalCount} 건`, 
-                    color: 'var(--text)',
-                    extra: [
-                      { label: '클레임 없음', value: `${dashboardStats.totalNoClaimCount} 건` },
-                      { label: '대상 잔액', value: `${dashboardStats.totalCount - dashboardStats.totalNoClaimCount} 건` }
-                    ]
-                  },
-                  { 
-                    label: '총 사고 발생액 합계', 
-                    value: `₩ ${dashboardStats.totalOccur.toLocaleString()}`, 
-                    color: 'var(--text)',
-                    extra: [
-                      { label: '클레임 없음', value: `₩ ${dashboardStats.totalNoClaimOccur.toLocaleString()}` },
-                      { label: '대상 잔액', value: `₩ ${(dashboardStats.totalOccur - dashboardStats.totalNoClaimOccur).toLocaleString()}` }
-                    ]
-                  },
-                  { 
-                    label: '총 배상 지급액 합계', 
-                    value: `₩ ${dashboardStats.totalComp.toLocaleString()}`, 
-                    sub: '대고객사 배상 지급 누계', 
-                    color: '#ef4444' 
-                  },
-                  { 
-                    label: '총 회수액 합계', 
-                    value: `₩ ${dashboardStats.totalRecov.toLocaleString()}`, 
-                    sub: '보험금 및 구상/잔존 회수 누계', 
-                    color: '#10b981' 
-                  },
-                  { 
-                    label: '회사 순 손실액 합계', 
-                    value: `₩ ${dashboardStats.totalLoss.toLocaleString()}`, 
-                    sub: '최종 손실 누계 (배상액 - 회수액)', 
-                    color: '#ef4444', 
-                    highlight: true 
-                  }
-                ].map((s, i) => (
-                  <div key={i} className="panel" style={{ padding: '24px', border: s.highlight ? '2px solid #fee2e2' : '1px solid var(--border)' }}>
-                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, marginBottom: '12px' }}>{s.label}</div>
-                    <div style={{ fontSize: '1.6rem', fontWeight: 800, color: s.color, marginBottom: '8px' }}>{s.value}</div>
-                    {s.sub && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500 }}>{s.sub}</div>}
-                    {s.extra && s.extra.map((ex, exi) => (
-                      <div key={exi} style={{ 
-                        fontSize: '0.75rem', 
-                        color: 'var(--text-muted)', 
-                        marginTop: exi === 0 ? '8px' : '4px', 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center', 
-                        borderTop: exi === 0 ? '1px dashed var(--border)' : 'none', 
-                        paddingTop: exi === 0 ? '8px' : '0px', 
-                        gap: '10px' 
-                      }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center' }}>{ex.label}</span>
-                        <strong style={{ color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={ex.value}>{ex.value}</strong>
-                      </div>
-                    ))}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+                {/* 1. 전체 사고 현황 */}
+                <div className="panel" style={{ padding: '20px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>📊</span> 전체 사고 현황
                   </div>
-                ))}
+                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>접수 건수</span>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text)' }}>{dashboardStats.totalCount} 건</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>발생액 합계</span>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text)' }}>₩ {dashboardStats.totalOccur.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. 클레임 없음 */}
+                <div className="panel" style={{ padding: '20px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: '#10b981' }}>✅</span> 클레임 없음 (면책/무이의)
+                  </div>
+                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>종결 건수</span>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#10b981' }}>{dashboardStats.totalNoClaimCount} 건</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>사고액 합계</span>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#10b981' }}>₩ {dashboardStats.totalNoClaimOccur.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. 클레임 대상 (잔액) */}
+                <div className="panel" style={{ padding: '20px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: '#f59e0b' }}>🔄</span> 클레임 대상 (잔액)
+                  </div>
+                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>진행 건수</span>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#f59e0b' }}>{dashboardStats.totalCount - dashboardStats.totalNoClaimCount} 건</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>대상액 합계</span>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#f59e0b' }}>₩ {(dashboardStats.totalOccur - dashboardStats.totalNoClaimOccur).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. 배상 및 순 손실 */}
+                <div className="panel" style={{ padding: '20px', border: '2px solid #fee2e2', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: '#ef4444' }}>🚨</span> 배상 및 순 손실
+                  </div>
+                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>배상/회수액</span>
+                      <span style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text)' }}>
+                        <span style={{ color: '#ef4444' }}>₩{dashboardStats.totalComp.toLocaleString()}</span> / <span style={{ color: '#10b981' }}>₩{dashboardStats.totalRecov.toLocaleString()}</span>
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>회사 순 손실</span>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ef4444' }}>₩ {dashboardStats.totalLoss.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* 차트 및 부서별 비중 */}
