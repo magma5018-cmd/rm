@@ -3455,7 +3455,23 @@ export default function Home() {
                       ? weeklyData.insuranceRenewals
                           .filter(r => r.daysLeft <= 90 && r.daysLeft >= 0)
                           .map(r => ({
-                            label: r.구분 ? `[${r.구분}]` : '-',
+                            label: (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                <span>{r.구분 ? `[${r.구분}]` : '-'}</span>
+                                <span style={{ 
+                                  fontSize: '0.62rem', 
+                                  fontWeight: 700, 
+                                  color: r.daysLeft <= 30 ? '#ef4444' : '#f59e0b',
+                                  backgroundColor: r.daysLeft <= 30 ? '#fef2f2' : '#fffbeb',
+                                  padding: '1px 3px',
+                                  borderRadius: '3px',
+                                  border: `1px solid ${r.daysLeft <= 30 ? '#fee2e2' : '#fef3c7'}`,
+                                  lineHeight: '1'
+                                }}>
+                                  D-{r.daysLeft}
+                                </span>
+                              </span>
+                            ),
                             value: r.보험명 || '-'
                           }))
                       : undefined
@@ -3472,9 +3488,9 @@ export default function Home() {
                       <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{c.unit}</span>
                     </div>
                     {c.extra && c.extra.map((ex, exi) => (
-                      <div key={exi} style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: exi === 0 ? '5px' : '3px', display: 'flex', justifyContent: 'space-between', borderTop: exi === 0 ? '1px dashed var(--border)' : 'none', paddingTop: exi === 0 ? '5px' : '0px', gap: '10px' }}>
-                        <span style={{ whiteSpace: 'nowrap' }}>{ex.label}</span>
-                        <strong style={{ color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '140px' }} title={ex.value}>{ex.value}</strong>
+                      <div key={exi} style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: exi === 0 ? '5px' : '3px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: exi === 0 ? '1px dashed var(--border)' : 'none', paddingTop: exi === 0 ? '5px' : '0px', gap: '10px' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center' }}>{ex.label}</span>
+                        <strong style={{ color: 'var(--text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '110px' }} title={ex.value}>{ex.value}</strong>
                       </div>
                     ))}
                   </div>
