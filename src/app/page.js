@@ -3106,13 +3106,13 @@ export default function Home() {
                   { 
                     label: '접수 사고 건수', 
                     value: `${dashboardStats.totalCount} 건`, 
-                    sub: `클레임 없음: ${dashboardStats.totalNoClaimCount}건 포함`, 
+                    sub: `클레임 없음: ${dashboardStats.totalNoClaimCount}건 (대상 잔액: ${dashboardStats.totalCount - dashboardStats.totalNoClaimCount}건)`, 
                     color: 'var(--text)' 
                   },
                   { 
                     label: '총 사고 발생액 합계', 
                     value: `₩ ${dashboardStats.totalOccur.toLocaleString()}`, 
-                    sub: `클레임 없음: ₩ ${dashboardStats.totalNoClaimOccur.toLocaleString()} 포함`, 
+                    sub: `클레임 없음: ₩ ${dashboardStats.totalNoClaimOccur.toLocaleString()} (대상 잔액: ₩ ${(dashboardStats.totalOccur - dashboardStats.totalNoClaimOccur).toLocaleString()})`, 
                     color: 'var(--text)' 
                   },
                   { 
