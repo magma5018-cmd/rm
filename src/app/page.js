@@ -843,7 +843,7 @@ export default function Home() {
     width: colWidths[col] || 90,
     minWidth: colWidths[col] || 60,
     maxWidth: colWidths[col] || 9999,
-    overflow: 'hidden',
+    overflow: LONG_TEXT.has(col) ? 'visible' : 'hidden',
     position: LONG_TEXT.has(col) ? 'relative' : 'static',
     ...extra,
   });
