@@ -545,6 +545,7 @@ tbody tr:last-child td { border-bottom: none; }
   border-radius: 4px;
   line-height: 1.45;
   resize: none;
+  max-height: 65px !important; /* 평상시 최대 3줄(65px)까지 보이도록 허용 */
   overflow: hidden;
   transition: background 0.15s, box-shadow 0.15s;
   display: block;
