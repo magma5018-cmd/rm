@@ -638,6 +638,7 @@ export default function Home() {
   // 목록 테이블 정렬
   const [sortConfig, setSortConfig] = useState({ key: null, dir: 'asc' }); // key: 컬럼명 | null
   const [insSortConfig, setInsSortConfig] = useState({ key: null, dir: 'asc' });
+  const [drillSortConfig, setDrillSortConfig] = useState({ key: null, dir: 'asc' });
 
   // 삭제확인 팝업
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -731,6 +732,11 @@ export default function Home() {
       setDeferredListRender(false);
     }
   }, [activeMenu]);
+
+  // 드릴다운 대상 필터 변경 시 정렬 상태 초기화
+  useEffect(() => {
+    setDrillSortConfig({ key: null, dir: 'asc' });
+  }, [drillFilter]);
 
   // ── 데이터 로드 ──
   useEffect(() => {
@@ -1454,7 +1460,7 @@ export default function Home() {
   // ── 드릴다운 데이터 계산 ──
   const drillRows = useMemo(() => {
     if (!drillFilter) return [];
-    return rows.filter(r => {
+    const arr = rows.filter(r => {
       if (!r.사고일) return false;
       if (dashStartDate && r.사고일 < dashStartDate) return false;
       if (dashEndDate && r.사고일 > dashEndDate) return false;
@@ -1492,7 +1498,47 @@ export default function Home() {
       }
       return false;
     });
-  }, [rows, drillFilter, dashStartDate, dashEndDate]);
+
+    if (!drillSortConfig.key) return arr;
+    const { key, dir } = drillSortConfig;
+    const mul = dir === 'asc' ? 1 : -1;
+
+    return [...arr].sort((a, b) => {
+      let va = '';
+      let vb = '';
+
+      if (key === '부서') {
+        va = a.부서 || a.사업부 || '';
+        vb = b.부서 || b.사업부 || '';
+      } else if (key === '손실액') {
+        const isCompA = a.완료보고?.startsWith('완료');
+        const isCompB = b.완료보고?.startsWith('완료');
+        const reportStatusA = a.완료보고 || '';
+        const methodA = a.완료방법 || '';
+        const isNoClaimA = reportStatusA.includes('클레임 없음') || methodA.includes('면책') || methodA.includes('무이의') || methodA.includes('무의이');
+        const reportStatusB = b.완료보고 || '';
+        const methodB = b.완료방법 || '';
+        const isNoClaimB = reportStatusB.includes('클레임 없음') || methodB.includes('면책') || methodB.includes('무이의') || methodB.includes('무의이');
+
+        va = (!isCompA || isNoClaimA) ? 0 : parseAmount(a.손실액);
+        vb = (!isCompB || isNoClaimB) ? 0 : parseAmount(b.손실액);
+        return (va - vb) * mul;
+      } else if (key === '사고액') {
+        va = parseAmount(a.사고액);
+        vb = parseAmount(b.사고액);
+        return (va - vb) * mul;
+      } else if (key === '대표이사 보고') {
+        va = a['대표이사 보고사항'] || '';
+        vb = b['대표이사 보고사항'] || '';
+      } else {
+        const dbKey = key;
+        va = a[dbKey] ?? '';
+        vb = b[dbKey] ?? '';
+      }
+
+      return String(va).localeCompare(String(vb), 'ko') * mul;
+    });
+  }, [rows, drillFilter, dashStartDate, dashEndDate, drillSortConfig]);
 
   const toggleDrill = (type, value) => {
     setDrillFilter(prev => {
@@ -1511,6 +1557,14 @@ export default function Home() {
 
   const handleInsSort = (key) => {
     setInsSortConfig(prev =>
+      prev.key === key
+        ? prev.dir === 'asc' ? { key, dir: 'desc' } : { key: null, dir: 'asc' }
+        : { key, dir: 'asc' }
+    );
+  };
+
+  const handleDrillSort = (key) => {
+    setDrillSortConfig(prev =>
       prev.key === key
         ? prev.dir === 'asc' ? { key, dir: 'desc' } : { key: null, dir: 'asc' }
         : { key, dir: 'asc' }
@@ -3477,9 +3531,31 @@ export default function Home() {
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
                       <thead>
                         <tr style={{ background: '#f8fafc', position: 'sticky', top: 0 }}>
-                          {['사고번호', '사고일', '사고접수일', '가이드제공일', '부서', '사고명', '귀책사', '사고액', '손실액', '대표이사 보고', '완료보고', '완료보고일', '보험접수'].map(h => (
-                            <th key={h} style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: 'var(--text)', borderBottom: '2px solid var(--border)', whiteSpace: 'nowrap' }}>{h}</th>
-                          ))}
+                          {['사고번호', '사고일', '사고접수일', '가이드제공일', '부서', '사고명', '귀책사', '사고액', '손실액', '대표이사 보고', '완료보고', '완료보고일', '보험접수'].map(h => {
+                            const active = drillSortConfig.key === h;
+                            return (
+                              <th
+                                key={h}
+                                onClick={() => handleDrillSort(h)}
+                                style={{
+                                  padding: '12px 16px',
+                                  textAlign: 'center',
+                                  fontWeight: 700,
+                                  color: 'var(--text)',
+                                  borderBottom: '2px solid var(--border)',
+                                  whiteSpace: 'nowrap',
+                                  cursor: 'pointer',
+                                  userSelect: 'none',
+                                  background: active ? '#eff6ff' : '#f8fafc'
+                                }}
+                              >
+                                {h}
+                                <span style={{ marginLeft: '4px', fontSize: '0.62rem', verticalAlign: 'middle', color: active ? 'var(--primary)' : '#d1d5db' }}>
+                                  {active ? (drillSortConfig.dir === 'asc' ? '▲' : '▼') : '⇅'}
+                                </span>
+                              </th>
+                            );
+                          })}
                           <th style={{ padding: '12px 16px', borderBottom: '2px solid var(--border)', width: '1%' }} />
                         </tr>
                       </thead>
