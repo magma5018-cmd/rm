@@ -904,9 +904,12 @@ export default function Home() {
     setRows(prev => prev.map(r => {
       if (r.id === id) {
         const updated = { ...r, [field]: value };
-        // 금액 관련 필드나 완료보고 상태가 수정되면 손실액 자동 계산 (단, 완료보고가 '완료 (클레임 없음)'인 경우 손실액은 0원)
+        // 금액 관련 필드나 완료보고 상태가 수정되면 손실액 자동 계산 (단, 완료보고가 '완료 (클레임 없음)'이거나 미완료인 경우 손실액은 0원)
         if (['사고액', '배상액', '회수액', '자기부담금', '완료보고'].includes(field)) {
-          if (updated['완료보고'] === '완료 (클레임 없음)') {
+          const status = updated['완료보고'] || '미완료';
+          if (!status.startsWith('완료')) {
+            updated['손실액'] = '0';
+          } else if (status === '완료 (클레임 없음)') {
             updated['손실액'] = '0';
           } else {
             const occur = parseAmount(updated['사고액']);
@@ -1369,10 +1372,11 @@ export default function Home() {
       const reportStatus = r.완료보고 || '';
       const method = r.완료방법 || '';
       const isNoClaim = reportStatus.includes('클레임 없음') || method.includes('면책') || method.includes('무이의') || method.includes('무의이');
+      const isCompleted = reportStatus.startsWith('완료');
       const occur = parseAmount(r.사고액);
-      const comp = isNoClaim ? 0 : parseAmount(r.배상액);
-      const recov = isNoClaim ? 0 : parseAmount(r.회수액);
-      const loss = isNoClaim ? 0 : parseAmount(r.손실액);
+      const comp = (!isCompleted || isNoClaim) ? 0 : parseAmount(r.배상액);
+      const recov = (!isCompleted || isNoClaim) ? 0 : parseAmount(r.회수액);
+      const loss = (!isCompleted || isNoClaim) ? 0 : parseAmount(r.손실액);
 
       totalOccur += occur;
       totalComp += comp;
@@ -1479,9 +1483,10 @@ export default function Home() {
           return !isNoClaim;
         }
         if (drillFilter.value === 'loss') {
-          const loss = isNoClaim ? 0 : parseAmount(r.손실액);
-          const comp = isNoClaim ? 0 : parseAmount(r.배상액);
-          const recov = isNoClaim ? 0 : parseAmount(r.회수액);
+          const isCompleted = reportStatus.startsWith('완료');
+          const loss = (!isCompleted || isNoClaim) ? 0 : parseAmount(r.손실액);
+          const comp = (!isCompleted || isNoClaim) ? 0 : parseAmount(r.배상액);
+          const recov = (!isCompleted || isNoClaim) ? 0 : parseAmount(r.회수액);
           return loss > 0 || comp > 0 || recov > 0;
         }
       }
@@ -3014,7 +3019,7 @@ export default function Home() {
                               <textarea data-table="acc" data-row={rIdx} data-col={13 + cIdx} className="cell-textarea" defaultValue={row[col] || ''} ref={autoResize} onInput={e => autoResize(e.target)} onBlur={e => { if (e.target.value !== (row[col] || '')) updateCell(row.id, col, e.target.value); }} style={{ textAlign: 'left' }} title={row[col] || ''} />
                             ) : NUM_FIELDS.has(col) ? (
                               <input data-table="acc" data-row={rIdx} data-col={13 + cIdx} className="cell-input" 
-                                value={col === '손실액' ? (row[col] || '0') : undefined}
+                                value={col === '손실액' ? ((row['완료보고']?.startsWith('완료')) ? (row[col] || '0') : '0') : undefined}
                                 defaultValue={col !== '손실액' ? (row[col] || '') : undefined}
                                 readOnly={col === '손실액'}
                                 onBlur={e => {
@@ -3495,7 +3500,7 @@ export default function Home() {
                             <td style={{ padding: '10px 16px', textAlign: 'center', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.사고명}</td>
                             <td style={{ padding: '10px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>{r.귀책사 || '-'}</td>
                             <td style={{ padding: '10px 16px', textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600 }}>{r.사고액 ? `₩${Number(String(r.사고액).replace(/[^0-9]/g, '')).toLocaleString()}` : '-'}</td>
-                            <td style={{ padding: '10px 16px', textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, color: '#ef4444' }}>{r.손실액 ? `₩${Number(String(r.손실액).replace(/[^0-9]/g, '')).toLocaleString()}` : '-'}</td>
+                            <td style={{ padding: '10px 16px', textAlign: 'right', whiteSpace: 'nowrap', fontWeight: 600, color: '#ef4444' }}>{r.완료보고?.startsWith('완료') && r.손실액 && parseAmount(r.손실액) > 0 ? `₩${parseAmount(r.손실액).toLocaleString()}` : '-'}</td>
                             <td style={{ padding: '10px 16px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                               {r['대표이사 보고사항'] ? (
                                 <span style={{ padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700, background: r['대표이사 보고사항'] === 'O' ? '#e8f5e9' : '#ffebee', color: r['대표이사 보고사항'] === 'O' ? '#2e7d32' : '#c62828' }}>
@@ -3690,7 +3695,7 @@ export default function Home() {
                                   { label: '실화주', value: r.실화주 || '-' },
                                   { label: '고객사', value: r.고객사 || '-' },
                                   { label: '사고액', value: r.사고액 ? `₩${Number(String(r.사고액).replace(/[^0-9]/g, '')).toLocaleString()}` : '-' },
-                                  { label: '손실액', value: r.손실액 ? `₩${Number(String(r.손실액).replace(/[^0-9]/g, '')).toLocaleString()}` : '-' },
+                                  { label: '손실액', value: r.완료보고?.startsWith('완료') && r.손실액 && parseAmount(r.손실액) > 0 ? `₩${parseAmount(r.손실액).toLocaleString()}` : '-' },
                                   { label: '대표이사 보고사항', value: r['대표이사 보고사항'] || '-' },
                                   { label: '대표이사 보고일', value: r['대표이사 보고일'] || '-' },
                                   { label: '보험접수', value: r.보험접수 === 'Y' ? `접수 (${r.보험사 || '-'}${r.접수보험 ? ` / ${r.접수보험}` : ''})` : '미접수' },
@@ -3852,7 +3857,7 @@ export default function Home() {
                               { label: '실화주', value: r.실화주 || '-' },
                               { label: '고객사', value: r.고객사 || '-' },
                               { label: '사고액', value: r.사고액 ? `₩${Number(String(r.사고액).replace(/[^0-9]/g, '')).toLocaleString()}` : '-' },
-                              { label: '손실액', value: r.손실액 ? `₩${Number(String(r.손실액).replace(/[^0-9]/g, '')).toLocaleString()}` : '-' },
+                              { label: '손실액', value: r.완료보고?.startsWith('완료') && r.손실액 && parseAmount(r.손실액) > 0 ? `₩${parseAmount(r.손실액).toLocaleString()}` : '-' },
                               { label: '대표이사 보고사항', value: r['대표이사 보고사항'] || '-' },
                               { label: '대표이사 보고일', value: r['대표이사 보고일'] || '-' },
                               { label: '보험사', value: r.보험사 || '-' },
