@@ -61,7 +61,8 @@ const HEADERS = [
   '사고 심각도',
   '사고 발생가능성',
   '사고 위험등급',
-  '인명 피해 상세 내용'
+  '인명 피해 상세 내용',
+  'AI 보고서 내용'
 ];
 
 export async function POST(request) {
@@ -106,6 +107,25 @@ export async function POST(request) {
     });
     const existingRows = readRes.data.values || [];
     const hasHeader = existingRows.length > 0 && existingRows[0][0] === 'ID';
+
+    // 헤더가 이미 존재하는 경우, 최신 HEADERS 길이와 비교하여 누락된 열이 있다면 자동으로 추가해 줍니다.
+    if (hasHeader) {
+      const getHeaderRow = await sheets.spreadsheets.values.get({
+        spreadsheetId: sheetId,
+        range: `${SHEET_NAME}!1:1`,
+      });
+      const currentHeaders = getHeaderRow.data.values ? getHeaderRow.data.values[0] : [];
+      if (currentHeaders.length < HEADERS.length) {
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: sheetId,
+          range: `${SHEET_NAME}!A1:BZ1`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [HEADERS],
+          },
+        });
+      }
+    }
 
     // 헤더가 아예 없는 경우 (시트가 비어있거나 첫 행이 ID가 아님)
     if (!hasHeader) {
@@ -233,7 +253,8 @@ export async function POST(request) {
       body.qRiskSeverity || '',
       body.qRiskProbability || '',
       body.qRiskRating || '',
-      body.qHumanInjuryDetails || ''
+      body.qHumanInjuryDetails || '',
+      body.aiReportText || ''
     ];
 
     // 5. 시트에 데이터 추가 또는 업데이트
