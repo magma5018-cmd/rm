@@ -2437,7 +2437,7 @@ export default function Home() {
 
                  {/* Step 4 Content */}
                  {reportStep === 4 && (
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflow: 'hidden' }}>
                      {isGeneratingAIReport ? (
                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '340px', gap: '16px' }}>
                          <div className="spinner" />
@@ -2446,7 +2446,7 @@ export default function Home() {
                        </div>
                      ) : (
                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
-                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', order: 1 }}>
                            <span style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--success)' }}>
                              ✓ 구글 시트 저장 및 AI 보고서 초안 작성이 완료되었습니다. (접수 ID: {currentReportId})
                            </span>
@@ -2465,22 +2465,23 @@ export default function Home() {
 
                          <div style={{
                            flex: 1,
+                           order: 3,
                            overflowY: 'auto',
-                           padding: '24px',
+                           padding: '32px',
                            background: '#f8fafc',
                            border: '1px solid var(--border)',
                            borderRadius: '12px',
-                           maxHeight: '38vh',
+                           maxHeight: '100%',
                            fontFamily: 'inherit',
-                           fontSize: '0.92rem',
-                           lineHeight: 1.6,
-                           color: '#1e293b',
+                           fontSize: '0.96rem',
+                           lineHeight: 1.7,
+                           color: '#0f172a',
                            whiteSpace: 'pre-wrap'
                          }}>
                            {aiReportText ? renderMarkdown(aiReportText) : '보고서 생성 결과를 불러오는 데 실패했습니다. 다시 시도해 주세요.'}
                          </div>
 
-                         <div style={{ background: '#eff6ff', padding: '14px 18px', borderRadius: '10px', border: '1px solid #bfdbfe' }}>
+                         <div style={{ background: '#eff6ff', padding: '14px 18px', borderRadius: '10px', border: '1px solid #bfdbfe', order: 2 }}>
                            <p style={{ fontSize: '0.82rem', color: '#1e40af', margin: 0, lineHeight: 1.5 }}>
                              💡 <strong>입력한 내용에 오타나 오류가 있으신가요?</strong> <br />
                              하단의 <strong>[수정하고 다시 쓰기]</strong> 버튼을 누르면 이전 단계로 돌아가 입력값을 수정한 후 재제출하실 수 있습니다. 재제출 시 구글 시트의 기존 행 데이터는 새로운 행을 만들지 않고 자동으로 업데이트됩니다.
