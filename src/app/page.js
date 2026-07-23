@@ -595,6 +595,7 @@ export default function Home() {
       let cleanReport = aiData.report || '';
       // 앞뒤의 ```markdown 백틱 기호를 정교하게 제거합니다.
       cleanReport = cleanReport.replace(/^```markdown\s*\n?/i, '').replace(/\n?```\s*$/, '');
+      cleanReport = cleanReport.replace(/<div[^>]*>/g, '').replace(/<\/div>/g, '');
       setAiReportText(cleanReport);
 
       // AI 보고서 본문 전문을 구글 스프레드시트에 2차 업데이트합니다.
