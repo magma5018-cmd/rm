@@ -334,6 +334,11 @@ export default function Home() {
 
   // 공통 마무리
   const [qDetails, setQDetails] = useState('');
+  const [qDetailsWho, setQDetailsWho] = useState('');
+  const [qDetailsWhen, setQDetailsWhen] = useState('');
+  const [qDetailsWhere, setQDetailsWhere] = useState('');
+  const [qDetailsWhat, setQDetailsWhat] = useState('');
+  const [qDetailsHow, setQDetailsHow] = useState('');
   const [qFiles, setQFiles] = useState([]);
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [currentReportId, setCurrentReportId] = useState(null);
@@ -405,7 +410,22 @@ export default function Home() {
     setQDomCause('');
     setQDomDate('');
     setQDetails('');
+    setQDetailsWho('');
+    setQDetailsWhen('');
+    setQDetailsWhere('');
+    setQDetailsWhat('');
+    setQDetailsHow('');
     setQFiles([]);
+  };
+
+  const updateQDetailsCombined = (who, when, where, what, how) => {
+    let combined = '';
+    if (who.trim()) combined += `[누가] ${who.trim()}\n`;
+    if (when.trim()) combined += `[언제] ${when.trim()}\n`;
+    if (where.trim()) combined += `[어디서] ${where.trim()}\n`;
+    if (what.trim()) combined += `[무엇을] ${what.trim()}\n`;
+    if (how.trim()) combined += `[어떻게/왜] ${how.trim()}`;
+    setQDetails(combined.trim());
   };
 
   const handleReportSubmit = async (e) => {
@@ -2406,36 +2426,139 @@ export default function Home() {
                  )}
 
                  {/* Step 3 Content */}
-                 {reportStep === 3 && (
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
-                     <div>
-                       <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '8px', fontSize: '0.78rem', lineHeight: 1.45 }}>
-                         <strong style={{ color: 'var(--primary)', display: 'block', marginBottom: '4px' }}>💡 현장 필수 작성 가이드 (육하원칙)</strong>
-                         <strong>누가(Who)</strong>: 사고 유발 주체 (예: 도착지 물류사 Guchang)<br/>
-                         <strong>언제(When)</strong>: 사고 발생 또는 최초 데미지 인지 시점<br/>
-                         <strong>어디서(Where)</strong>: 구체적 장소 (예: 하이퐁 터미널 보관 야드)<br/>
-                         <strong>무엇을(What)</strong>: 파손된 구체적 화물 및 패키지 상태 (예: 1 Pallet 젖음)<br/>
-                         <strong>어떻게/왜(How/Why)</strong>: 컨테이너 반출 당시 상단 5cm 구멍 타공 발견 등
-                       </div>
-                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>Q19. 상세 사고 경위 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                       <textarea
-                         value={qDetails}
-                         onChange={(e) => setQDetails(e.target.value)}
-                         placeholder="가이드에 맞게 상세한 경위를 기술해 주세요."
-                         style={{ width: '100%', height: '140px', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.92rem', resize: 'vertical', fontFamily: 'inherit', outline: 'none' }}
-                       />
-                     </div>
-                     <div style={{ background: '#f0fdf4', padding: '16px', borderRadius: '10px', border: '1px dashed #bbf7d0', marginTop: '12px' }}>
-                       <strong style={{ color: '#166534', display: 'block', marginBottom: '6px', fontSize: '0.88rem' }}>📎 Q20. 현장 사진 및 증빙 자료 안내</strong>
-                       <p style={{ fontSize: '0.8rem', color: '#1e3a1e', lineHeight: 1.5, margin: 0 }}>
-                         용량 제한 및 안정적인 접수를 위해 파일 업로드 기능이 제외되었습니다. <br />
-                         <strong>현장 실물 파손 사진 및 관련 서류(PDF 등)는 본 접수를 최종 제출하신 후, 본인 이메일로 수신되는 보고서 메일에 답장(회신)으로 직접 첨부하여 발송해 주시기 바랍니다.</strong>
-                       </p>
-                     </div>
-                   </div>
-                 )}
+                  {reportStep === 3 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div style={{ background: '#eff6ff', padding: '16px', borderRadius: '12px', border: '1px solid #bfdbfe', fontSize: '0.85rem', lineHeight: 1.5 }}>
+                          <strong style={{ color: '#1e40af', display: 'block', marginBottom: '6px', fontSize: '0.9rem' }}>💡 대화형 육하원칙 가이드</strong>
+                          <p style={{ margin: 0, color: '#1e3a8a' }}>아래 질문들에 차례대로 답해 주시면, 전문적인 물류 사고 경위서 문장을 실시간으로 자동 완성해 드립니다.</p>
+                        </div>
 
-                 {/* Step 4 Content */}
+                        {/* 1. Who (누가) */}
+                        <div style={{ padding: '18px', border: '1px solid var(--border)', borderRadius: '12px', background: 'white', transition: 'all 0.3s' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                            <strong style={{ fontSize: '0.92rem', color: 'var(--text)' }}>1️⃣ 누가 (Who) - 사고 유발 및 귀책 주체 <span style={{ color: 'var(--danger)' }}>*</span></strong>
+                            {qDetailsWho.trim() !== '' && <span style={{ color: 'var(--success)', fontSize: '0.8rem', fontWeight: 700 }}>✓ 입력 완료</span>}
+                          </div>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>사고를 유발했거나 과실이 의심되는 대상을 적어주세요. (예: 도착지 물류사 Guchang, 차량 기사 등)</p>
+                          <input
+                            type="text"
+                            value={qDetailsWho}
+                            onChange={(e) => {
+                              setQDetailsWho(e.target.value);
+                              updateQDetailsCombined(e.target.value, qDetailsWhen, qDetailsWhere, qDetailsWhat, qDetailsHow);
+                            }}
+                            placeholder="예: 도착지 물류사 Guchang"
+                            style={{ ...inputStyle, background: '#f8fafc' }}
+                          />
+                        </div>
+
+                        {/* 2. When (언제) */}
+                        {qDetailsWho.trim() !== '' && (
+                          <div style={{ padding: '18px', border: '1px solid var(--border)', borderRadius: '12px', background: 'white', transition: 'all 0.3s' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                              <strong style={{ fontSize: '0.92rem', color: 'var(--text)' }}>2️⃣ 언제 (When) - 최초 인지 및 사고 일시 <span style={{ color: 'var(--danger)' }}>*</span></strong>
+                              {qDetailsWhen.trim() !== '' && <span style={{ color: 'var(--success)', fontSize: '0.8rem', fontWeight: 700 }}>✓ 입력 완료</span>}
+                            </div>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>사고가 발생한 시점이나 데미지를 최초로 알게 된 때를 적어주세요. (예: 6/24 컨테이너 반출 당시 등)</p>
+                            <input
+                              type="text"
+                              value={qDetailsWhen}
+                              onChange={(e) => {
+                                setQDetailsWhen(e.target.value);
+                                updateQDetailsCombined(qDetailsWho, e.target.value, qDetailsWhere, qDetailsWhat, qDetailsHow);
+                              }}
+                              placeholder="예: 6/24 컨테이너 반출 당시"
+                              style={{ ...inputStyle, background: '#f8fafc' }}
+                            />
+                          </div>
+                        )}
+
+                        {/* 3. Where (어디서) */}
+                        {qDetailsWho.trim() !== '' && qDetailsWhen.trim() !== '' && (
+                          <div style={{ padding: '18px', border: '1px solid var(--border)', borderRadius: '12px', background: 'white', transition: 'all 0.3s' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                              <strong style={{ fontSize: '0.92rem', color: 'var(--text)' }}>3️⃣ 어디서 (Where) - 구체적인 사고 발생 장소 <span style={{ color: 'var(--danger)' }}>*</span></strong>
+                              {qDetailsWhere.trim() !== '' && <span style={{ color: 'var(--success)', fontSize: '0.8rem', fontWeight: 700 }}>✓ 입력 완료</span>}
+                            </div>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>구체적으로 사고가 발생한 물류 거점이나 위치를 입력해주세요. (예: 하이퐁 터미널 보관 야드 등)</p>
+                            <input
+                              type="text"
+                              value={qDetailsWhere}
+                              onChange={(e) => {
+                                setQDetailsWhere(e.target.value);
+                                updateQDetailsCombined(qDetailsWho, qDetailsWhen, e.target.value, qDetailsWhat, qDetailsHow);
+                              }}
+                              placeholder="예: 하이퐁 터미널 보관 야드"
+                              style={{ ...inputStyle, background: '#f8fafc' }}
+                            />
+                          </div>
+                        )}
+
+                        {/* 4. What (무엇을) */}
+                        {qDetailsWho.trim() !== '' && qDetailsWhen.trim() !== '' && qDetailsWhere.trim() !== '' && (
+                          <div style={{ padding: '18px', border: '1px solid var(--border)', borderRadius: '12px', background: 'white', transition: 'all 0.3s' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                              <strong style={{ fontSize: '0.92rem', color: 'var(--text)' }}>4️⃣ 무엇을 (What) - 피해 품목 및 포장 상태 <span style={{ color: 'var(--danger)' }}>*</span></strong>
+                              {qDetailsWhat.trim() !== '' && <span style={{ color: 'var(--success)', fontSize: '0.8rem', fontWeight: 700 }}>✓ 입력 완료</span>}
+                            </div>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>파손 피해를 입은 구체적 화물 품목과 그 수량, 상태를 입력해주세요. (예: 1 Pallet 젖음 피해 등)</p>
+                            <input
+                              type="text"
+                              value={qDetailsWhat}
+                              onChange={(e) => {
+                                setQDetailsWhat(e.target.value);
+                                updateQDetailsCombined(qDetailsWho, qDetailsWhen, qDetailsWhere, e.target.value, qDetailsHow);
+                              }}
+                              placeholder="예: 1 Pallet 화물 젖음 피해"
+                              style={{ ...inputStyle, background: '#f8fafc' }}
+                            />
+                          </div>
+                        )}
+
+                        {/* 5. How/Why (어떻게/왜) */}
+                        {qDetailsWho.trim() !== '' && qDetailsWhen.trim() !== '' && qDetailsWhere.trim() !== '' && qDetailsWhat.trim() !== '' && (
+                          <div style={{ padding: '18px', border: '1px solid var(--border)', borderRadius: '12px', background: 'white', transition: 'all 0.3s' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                              <strong style={{ fontSize: '0.92rem', color: 'var(--text)' }}>5️⃣ 어떻게/왜 (How/Why) - 구체적인 사고 원인 및 정황 <span style={{ color: 'var(--danger)' }}>*</span></strong>
+                              {qDetailsHow.trim() !== '' && <span style={{ color: 'var(--success)', fontSize: '0.8rem', fontWeight: 700 }}>✓ 입력 완료</span>}
+                            </div>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 10px 0' }}>사고가 왜 발생했는지 구체적인 상황을 서술해 주세요. (예: 컨테이너 반출 당시 상단 5cm 구멍 타공 발견 등)</p>
+                            <textarea
+                              value={qDetailsHow}
+                              onChange={(e) => {
+                                setQDetailsHow(e.target.value);
+                                updateQDetailsCombined(qDetailsWho, qDetailsWhen, qDetailsWhere, qDetailsWhat, e.target.value);
+                              }}
+                              placeholder="예: 컨테이너 반출 당시 상단 5cm 구멍 타공 발견으로 우천 시 빗물이 유입되어 침수 발생"
+                              style={{ ...inputStyle, background: '#f8fafc', height: '80px', resize: 'vertical', padding: '12px' }}
+                            />
+                          </div>
+                        )}
+
+                        {/* 최종 완성 요약 */}
+                        {qDetails.trim() !== '' && (
+                          <div style={{ padding: '20px', border: '1px solid #bbf7d0', borderRadius: '12px', background: '#f0fdf4', transition: 'all 0.3s' }}>
+                            <strong style={{ fontSize: '0.92rem', color: '#166534', display: 'block', marginBottom: '8px' }}>📝 실시간 결합된 상세 사고 경위서 요약</strong>
+                            <div style={{ fontSize: '0.9rem', color: '#14532d', lineHeight: 1.6, background: 'white', padding: '14px', borderRadius: '8px', border: '1px solid #dcfce7', whiteSpace: 'pre-wrap' }}>
+                              {qDetails}
+                            </div>
+                            <small style={{ color: '#166534', display: 'block', marginTop: '6px', fontSize: '0.78rem' }}>위 개별 질문을 수정하면 최종 요약본이 실시간으로 동기화됩니다.</small>
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ background: '#f0fdf4', padding: '16px', borderRadius: '10px', border: '1px dashed #bbf7d0', marginTop: '12px' }}>
+                        <strong style={{ color: '#166534', display: 'block', marginBottom: '6px', fontSize: '0.88rem' }}>📎 Q20. 현장 사진 및 증빙 자료 안내</strong>
+                        <p style={{ fontSize: '0.8rem', color: '#1e3a1e', lineHeight: 1.5, margin: 0 }}>
+                          용량 제한 및 안정적인 접수를 위해 파일 업로드 기능이 제외되었습니다. <br />
+                          <strong>현장 실물 파손 사진 및 관련 서류(PDF 등)는 본 접수를 최종 제출하신 후, 본인 이메일로 수신되는 보고서 메일에 답장(회신)으로 직접 첨부하여 발송해 주시기 바랍니다.</strong>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 4 Content */}
                  {reportStep === 4 && (
                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflow: 'hidden' }}>
                      {isGeneratingAIReport ? (
