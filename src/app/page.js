@@ -246,7 +246,7 @@ export default function Home() {
   // ── 신규 사고접수 설문지 상태 ──
   const [authViewMode, setAuthViewMode] = useState('select'); // 'select' | 'login' | 'report'
   const [reportStep, setReportStep] = useState(1); // 1, 2, 3
-  const [qEmail, setQEmail] = useState('');
+  const [qEmail, setQEmail] = useState('@hansol.com');
   const [qName, setQName] = useState('');
   const [qSalesDept, setQSalesDept] = useState('');
   const [qOpsDept, setQOpsDept] = useState('');
@@ -345,7 +345,7 @@ export default function Home() {
     setCurrentReportId(null);
     setAiReportText('');
     setIsGeneratingAIReport(false);
-    setQEmail('');
+    setQEmail('@hansol.com');
     setQName('');
     setQSalesDept('');
     setQOpsDept('');
@@ -1770,7 +1770,12 @@ export default function Home() {
     if (authViewMode === 'report') {
       const handleNext = () => {
         if (reportStep === 1) {
-          if (!qEmail || !qEmail.toLowerCase().endsWith('@hansol.com')) {
+          let emailVal = (qEmail || '').trim();
+          if (emailVal && !emailVal.includes('@')) {
+            emailVal = emailVal + '@hansol.com';
+            setQEmail(emailVal);
+          }
+          if (!emailVal || !emailVal.toLowerCase().endsWith('@hansol.com')) {
             alert('사내 이메일 주소(@hansol.com)를 입력해 주세요.');
             return;
           }
@@ -1857,10 +1862,16 @@ export default function Home() {
                         <div>
                           <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-muted)' }}>사내 이메일 주소 <span style={{ color: 'var(--danger)' }}>*</span></label>
                           <input
-                            type="email"
+                            type="text"
                             value={qEmail}
                             onChange={(e) => setQEmail(e.target.value)}
-                            placeholder="example@hansol.com"
+                            onBlur={(e) => {
+                              const val = e.target.value.trim();
+                              if (val && !val.includes('@')) {
+                                setQEmail(val + '@hansol.com');
+                              }
+                            }}
+                            placeholder="아이디 입력 (예: hong.gildong 또는 hong.gildong@hansol.com)"
                             style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
                             required
                           />
