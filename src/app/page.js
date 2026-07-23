@@ -1796,8 +1796,8 @@ export default function Home() {
       const progressPercent = ((reportStep - 1) / 3) * 80;
 
       return (
-        <div style={{ minHeight: '100vh', width: '100vw', background: '#f1f5f9', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ width: '100%', maxWidth: '1400px', margin: '0 auto', flex: 1, display: 'flex', flexDirection: 'column', background: 'white', minHeight: '100vh', boxShadow: '0 0 30px rgba(0,0,0,0.04)' }}>
+        <div style={{ height: '100vh', width: '100vw', background: '#f1f5f9', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div style={{ width: '100%', maxWidth: '1400px', margin: '0 auto', flex: 1, display: 'flex', flexDirection: 'column', background: 'white', height: '100vh', maxHeight: '100vh', boxShadow: '0 0 30px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
             {/* Header */}
             <div style={{ padding: '20px 28px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafbfc' }}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text)' }}>📋 통합 사고접수 신청서</h2>
@@ -1816,7 +1816,7 @@ export default function Home() {
             </div>
 
             {/* Body */}
-            <div style={{ padding: '28px', flex: 1 }}>
+            <div style={{ padding: '28px 40px', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               {/* Step Indicator (inline) */}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '32px', position: 'relative', width: '100%' }}>
                 <div style={{ position: 'absolute', top: '15px', left: '10%', right: '10%', height: '2px', background: '#e2e8f0', zIndex: 1 }} />
@@ -1852,10 +1852,10 @@ export default function Home() {
                 })}
               </div>
 
-              <div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 {/* Step 1 Content */}
                 {reportStep === 1 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: 'calc(100vh - 270px)', minHeight: '560px', overflowY: 'auto', paddingRight: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 800, marginBottom: '12px', color: 'var(--text)', borderBottom: '2px solid var(--border)', paddingBottom: '6px' }}>Q0. 작성자 및 담당 부서 정보</label>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '12px' }}>
@@ -2169,7 +2169,7 @@ export default function Home() {
 
                  {/* Step 2 Content: International */}
                  {reportStep === 2 && qCarriageType === 'international' && (
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: 'calc(100vh - 270px)', minHeight: '560px', overflowY: 'auto', paddingRight: '8px' }}>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                        <div>
                          <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>A-1. Shipper 명 <span style={{ color: 'var(--danger)' }}>*</span></label>
@@ -2344,7 +2344,7 @@ export default function Home() {
 
                  {/* Step 2 Content: Domestic */}
                  {reportStep === 2 && qCarriageType !== 'international' && (
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: 'calc(100vh - 270px)', minHeight: '560px', overflowY: 'auto', paddingRight: '8px' }}>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                        <div>
                          <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: 700, marginBottom: '6px' }}>B-1. 거래처 (화주) 명 <span style={{ color: 'var(--danger)' }}>*</span></label>
@@ -2407,7 +2407,7 @@ export default function Home() {
 
                  {/* Step 3 Content */}
                  {reportStep === 3 && (
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxHeight: 'calc(100vh - 270px)', minHeight: '560px', overflowY: 'auto', paddingRight: '8px' }}>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1, overflowY: 'auto', paddingRight: '8px' }}>
                      <div>
                        <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '8px', fontSize: '0.78rem', lineHeight: 1.45 }}>
                          <strong style={{ color: 'var(--primary)', display: 'block', marginBottom: '4px' }}>💡 현장 필수 작성 가이드 (육하원칙)</strong>
