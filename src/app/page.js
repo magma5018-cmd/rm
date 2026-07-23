@@ -1910,13 +1910,13 @@ export default function Home() {
                               type="text"
                               value={qEmail.endsWith('@hansol.com') ? qEmail.replace(/@hansol\.com$/, '') : qEmail}
                               onChange={(e) => {
-                                let val = e.target.value.trim();
+                                let val = e.target.value.trim().toLowerCase();
                                 if (val.includes('@')) {
                                   val = val.split('@')[0];
                                 }
                                 setQEmail(val ? `${val}@hansol.com` : '');
                               }}
-                              placeholder="사내 아이디 입력 (예: hong.gildong)"
+                              placeholder="한솔 이메일 앞 부분만 입력해 주세요 (예: hong.gildong)"
                               style={{ flex: 1, padding: '12px', border: 'none', outline: 'none', fontSize: '0.9rem', fontFamily: 'inherit' }}
                               required
                             />
@@ -1943,7 +1943,7 @@ export default function Home() {
                             type="text"
                             value={qSalesDept}
                             onChange={(e) => setQSalesDept(e.target.value)}
-                            placeholder="예: SALES1 / 김동하 책임"
+                            placeholder="예: SALES1 / 홍길동 책임"
                             style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
                           />
                         </div>
@@ -1953,7 +1953,7 @@ export default function Home() {
                             type="text"
                             value={qOpsDept}
                             onChange={(e) => setQOpsDept(e.target.value)}
-                            placeholder="예: 운영1파트 / 김현정 책임"
+                            placeholder="예: 운영1파트 / 홍길동 책임"
                             style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
                           />
                         </div>
