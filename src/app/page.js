@@ -1923,7 +1923,7 @@ export default function Home() {
                 onClick={async () => {
                         const emailVal = qEmail || '사내 이메일';
                         const confirmClose = window.confirm(
-                          `📧 [제출 완료 (닫기)]를 실행하면 입력하신 이메일(${emailVal})로 PDF 보고서가 자동 발송됩니다.\n\n수신된 메일에 '답장(회신)'을 누르시고 [사고 현장 사진 및 증빙 자료]를 첨부한 뒤, 사내 사고 보고 체계에 맞춰 관련 수신 참조인을 지정하여 전송해 주셔야 최종 접수가 완료됩니다.\n\n사고 접수 신청서를 최종 제출하고 창을 닫으시겠습니까?`
+                          `📧 [제출 완료 (닫기)]를 실행하면 입력하신 이메일(${emailVal})로 PDF 보고서가 자동 발송됩니다.\n\n수신된 메일에 '답장(회신)'을 누르시고 [사고 현장 사진 및 증빙 자료]를 첨부한 뒤, 사내보고 체계 수신인 및 참조인을 지정하여 전송해 주셔야 최종 접수가 완료됩니다.\n\n사고 접수 신청서를 최종 제출하고 창을 닫으시겠습니까?`
                         );
                         if (confirmClose) {
                           await triggerEmailSend(currentReportId);
@@ -2692,7 +2692,7 @@ export default function Home() {
                             </div>
                             <p style={{ fontSize: '0.85rem', color: '#14532d', margin: 0, lineHeight: 1.5 }}>
                               📧 하단의 <strong>[제출 완료 (닫기)]</strong> 버튼을 누르시면, 입력하신 사내 이메일 <strong>({qEmail})</strong>로 <strong>PDF 보고서 파일이 자동 발송</strong>됩니다.<br />
-                              <strong>메일 수신 후, 해당 메일에 '답장(회신)'을 누르시고 [사고 현장 사진 및 증빙 자료]를 첨부하여 사내 보고 체계 참조인과 함께 전송해 주세요.</strong>
+                              <strong>메일 수신 후, 해당 메일에 '답장(회신)'을 누르시고 [사고 현장 사진 및 증빙 자료]를 첨부하여 사내보고 체계 수신인 및 참조인과 함께 전송해 주세요.</strong>
                             </p>
                           </div>
 
@@ -2769,7 +2769,7 @@ export default function Home() {
                       onClick={async () => {
                         const emailVal = qEmail || '사내 이메일';
                         const confirmClose = window.confirm(
-                          `📧 [제출 완료 (닫기)]를 실행하면 입력하신 이메일(${emailVal})로 PDF 보고서가 자동 발송됩니다.\n\n수신된 메일에 '답장(회신)'을 누르시고 [사고 현장 사진 및 증빙 자료]를 첨부한 뒤, 사내 사고 보고 체계에 맞춰 관련 수신 참조인을 지정하여 전송해 주셔야 최종 접수가 완료됩니다.\n\n사고 접수 신청서를 최종 제출하고 창을 닫으시겠습니까?`
+                          `📧 [제출 완료 (닫기)]를 실행하면 입력하신 이메일(${emailVal})로 PDF 보고서가 자동 발송됩니다.\n\n수신된 메일에 '답장(회신)'을 누르시고 [사고 현장 사진 및 증빙 자료]를 첨부한 뒤, 사내보고 체계 수신인 및 참조인을 지정하여 전송해 주셔야 최종 접수가 완료됩니다.\n\n사고 접수 신청서를 최종 제출하고 창을 닫으시겠습니까?`
                         );
                         if (confirmClose) {
                           await triggerEmailSend(currentReportId);
