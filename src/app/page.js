@@ -344,6 +344,26 @@ export default function Home() {
   const [currentReportId, setCurrentReportId] = useState(null);
   const [aiReportText, setAiReportText] = useState('');
   const [isGeneratingAIReport, setIsGeneratingAIReport] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('🤖 AI가 사고 보고서 골격을 형성하고 있습니다...');
+  
+  useEffect(() => {
+    if (!isGeneratingAIReport) return;
+    const messages = [
+      "🤖 AI가 사고 보고서 골격을 형성하고 있습니다...",
+      "📝 기입해주신 사고 데이터를 정밀 추출 및 분류하는 중...",
+      "🔍 손해 규모와 과실 귀책 데이터를 법적 근거에 대조하는 중...",
+      "📊 보험 청구 적합성 심사를 위한 피드백 조언을 분석 중...",
+      "💾 구글 스프레드시트에 영구 동기화 기록 절차를 이행 중...",
+      "📧 이메일 및 복사 가능 A4 PDF 문서 조립 작업을 승인 준비 중..."
+    ];
+    let idx = 0;
+    setLoadingMessage(messages[0]);
+    const timer = setInterval(() => {
+      idx = (idx + 1) % messages.length;
+      setLoadingMessage(messages[idx]);
+    }, 1500);
+    return () => clearInterval(timer);
+  }, [isGeneratingAIReport]);
 
   const resetQuestionnaire = () => {
     setReportStep(1);
@@ -2043,46 +2063,61 @@ export default function Home() {
 
                     <div style={{ marginBottom: '24px' }}>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text)' }}>Q0-1. 인명 사고 발생 여부 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <div style={{ display: 'flex', gap: '20px', marginBottom: qHumanInjury === 'Y' ? '8px' : '0px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', cursor: 'pointer', fontWeight: qHumanInjury === 'N' ? 700 : 500 }}>
-                          <input
-                            type="radio"
-                            name="qHumanInjury"
-                            value="N"
-                            checked={qHumanInjury === 'N'}
-                            onChange={() => {
-                              setQHumanInjury('N');
-                              setQHumanInjuryDetails('');
-                              setQInjuryName('');
-                              setQInjuryGender('');
-                              setQInjuryAge('');
-                              setQInjuryNationality('');
-                              setQInjuryAffiliation('');
-                              setQInjuryWorkType('');
-                              setQInjuryEmployType('');
-                              setQInjuryJob('');
-                              setQInjuryPart('');
-                              setQInjuryType('');
-                              setQInjurySeverity('');
-                              setQPropertyAsset('');
-                              setQPropertyCause('');
-                              setQPropertyCost('');
-                              setQRiskSeverity('');
-                              setQRiskProbability('');
-                            }}
-                          />
-                          없음 (N)
-                        </label>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem', cursor: 'pointer', fontWeight: qHumanInjury === 'Y' ? 700 : 500 }}>
-                          <input
-                            type="radio"
-                            name="qHumanInjury"
-                            value="Y"
-                            checked={qHumanInjury === 'Y'}
-                            onChange={() => setQHumanInjury('Y')}
-                          />
-                          있음 (Y)
-                        </label>
+                      <div style={{ display: 'flex', gap: '12px', marginTop: '8px', marginBottom: qHumanInjury === 'Y' ? '8px' : '0px' }}>
+                        <div
+                          onClick={() => {
+                            setQHumanInjury('N');
+                            setQHumanInjuryDetails('');
+                            setQInjuryName('');
+                            setQInjuryGender('');
+                            setQInjuryAge('');
+                            setQInjuryNationality('');
+                            setQInjuryAffiliation('');
+                            setQInjuryWorkType('');
+                            setQInjuryEmployType('');
+                            setQInjuryJob('');
+                            setQInjuryPart('');
+                            setQInjuryType('');
+                            setQInjurySeverity('');
+                            setQPropertyAsset('');
+                            setQPropertyCause('');
+                            setQPropertyCost('');
+                            setQRiskSeverity('');
+                            setQRiskProbability('');
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '16px',
+                            borderRadius: '10px',
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                            border: qHumanInjury === 'N' ? '2.5px solid var(--primary)' : '1.5px solid var(--border)',
+                            background: qHumanInjury === 'N' ? '#eff6ff' : 'white',
+                            transition: 'all 0.2s ease-in-out',
+                            boxShadow: qHumanInjury === 'N' ? '0 4px 6px -1px rgba(37, 99, 235, 0.1)' : 'none'
+                          }}
+                        >
+                          <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>🛡️</div>
+                          <strong style={{ fontSize: '0.9rem', color: qHumanInjury === 'N' ? 'var(--primary)' : 'var(--text)' }}>없음 (N)</strong>
+                        </div>
+                        
+                        <div
+                          onClick={() => setQHumanInjury('Y')}
+                          style={{
+                            flex: 1,
+                            padding: '16px',
+                            borderRadius: '10px',
+                            cursor: 'pointer',
+                            textAlign: 'center',
+                            border: qHumanInjury === 'Y' ? '2.5px solid var(--primary)' : '1.5px solid var(--border)',
+                            background: qHumanInjury === 'Y' ? '#eff6ff' : 'white',
+                            transition: 'all 0.2s ease-in-out',
+                            boxShadow: qHumanInjury === 'Y' ? '0 4px 6px -1px rgba(37, 99, 235, 0.1)' : 'none'
+                          }}
+                        >
+                          <div style={{ fontSize: '1.2rem', marginBottom: '4px' }}>🚨</div>
+                          <strong style={{ fontSize: '0.9rem', color: qHumanInjury === 'Y' ? 'var(--primary)' : 'var(--text)' }}>있음 (Y)</strong>
+                        </div>
                       </div>
 
                       {qHumanInjury === 'Y' && (
