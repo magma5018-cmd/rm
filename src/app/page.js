@@ -621,13 +621,76 @@ export default function Home() {
     }
   };
 
-  const triggerEmailSend = async (targetId) => {
+    const triggerEmailSend = async (targetId) => {
     try {
+      const payload = {
+        qEmail,
+        qName,
+        qSalesDept,
+        qOpsDept,
+        qCarriageType,
+        qHumanInjury,
+        qInjuryName,
+        qInjuryGender,
+        qInjuryAge,
+        qInjuryNationality,
+        qInjuryAffiliation,
+        qInjuryWorkType,
+        qInjuryEmployType,
+        qInjuryJob,
+        qInjuryPart,
+        qInjuryType,
+        qInjurySeverity,
+        qPropertyAsset,
+        qPropertyCause,
+        qPropertyCost,
+        qRiskSeverity,
+        qRiskProbability,
+        qRiskRating: (qRiskSeverity && qRiskProbability) ? (parseInt(qRiskSeverity) * parseInt(qRiskProbability)).toString() : '',
+        qHumanInjuryDetails,
+        // 국제 운송
+        qIntlShipper,
+        qIntlConsignee,
+        qIntlIncoterms,
+        qIntlMode,
+        qIntlHbl,
+        qIntlMbl,
+        qIntlLiner,
+        qIntlPartner,
+        qIntlItem,
+        qIntlPolAtd,
+        qIntlPodAta,
+        qIntlTotalQty,
+        qIntlValue,
+        qIntlLossQty,
+        qIntlLossValue,
+        qIntlContract,
+        qIntlSow,
+        qIntlStage,
+        qIntlLocation,
+        qIntlProof,
+        // 국내 운송
+        qDomClient,
+        qDomOrigin,
+        qDomDestination,
+        qDomWaybill,
+        qDomItem,
+        qDomLossAmount,
+        actualSubcontractor,
+        firstCognizanceDate,
+        faultParty,
+        causeClassification,
+        qDetails,
+        driveUrl
+      };
+
       await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          ...payload,
           reportId: targetId,
+          aiReportText: aiReportText,
           emailSentStatus: 'Y'
         })
       });
