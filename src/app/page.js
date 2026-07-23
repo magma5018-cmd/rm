@@ -2716,19 +2716,35 @@ export default function Home() {
                               <div style={{ display: 'flex', gap: '8px' }}>
                                 <style>{`
                                   @media print {
-                                    /* 헤더, 네비게이션바, 버튼 등 모든 웹 인터페이스 요소 가림 */
+                                    /* 모든 부모 컨테이너의 100vh 고정 높이 락과 스크롤 숨김 강제 해제 */
+                                    html, body, main, 
+                                    div[style*="height: 100vh"],
+                                    div[style*="max-height: 100vh"],
+                                    div[style*="maxHeight: 100vh"],
+                                    div[style*="overflow: hidden"] {
+                                      height: auto !important;
+                                      max-height: none !important;
+                                      overflow: visible !important;
+                                      position: relative !important;
+                                      padding: 0 !important;
+                                      margin: 0 !important;
+                                    }
+                                    
+                                    /* 접수 헤더, 스텝 표시선, 네비게이션바, 버튼 등 모든 웹 UI 숨김 */
                                     aside, 
                                     header, 
                                     nav, 
                                     button, 
                                     .no-print,
-                                    div[style*="background: #f0fdf4"], 
+                                    div[style*="border-bottom: 1px solid var(--border)"], /* 신청서 헤더 */
+                                    div[style*="margin-bottom: 32px"], /* 스텝 바 */
+                                    div[style*="background: #f0fdf4"], /* 성공 안내 배너 */
                                     div[style*="order: 1"],
                                     div[style*="display: flex; gap: 8px"] {
                                       display: none !important;
                                     }
                                     
-                                    /* 오직 순수 보고서 내용물 카드만 화면 전체에 꽉 차도록 확장 */
+                                    /* 오직 순수한 보고서 본문 내용물만 화면 전체에 차오르도록 재배치 */
                                     div[style*="order: 2"] {
                                       border: none !important;
                                       box-shadow: none !important;
@@ -2736,6 +2752,9 @@ export default function Home() {
                                       margin: 0 !important;
                                       max-height: none !important;
                                       overflow: visible !important;
+                                      display: block !important;
+                                      width: 100% !important;
+                                      position: relative !important;
                                     }
                                     
                                     body {
