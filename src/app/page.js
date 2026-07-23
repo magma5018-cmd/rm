@@ -1842,9 +1842,15 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => {
-                  resetQuestionnaire();
-                  setAuthViewMode('select');
-                }}
+                        const emailVal = qEmail || '사내 이메일';
+                        const confirmClose = window.confirm(
+                          `📧 ${emailVal}로 보고서 메일(PDF 첨부)이 정상 발송되었습니다.\n\n수신된 메일에 '답장(회신)'을 누르시고, [사고 현장 사진 및 증빙 자료]를 첨부한 뒤 사내 사고 보고 체계에 맞춰 관련 수신 참조인을 지정하여 발송해 주세요.\n\n사고 접수 신청서 창을 닫으시겠습니까?`
+                        );
+                        if (confirmClose) {
+                          resetQuestionnaire();
+                          setAuthViewMode('select');
+                        }
+                      }}
                 className="btn btn-ghost"
                 style={{ padding: '6px 12px', fontSize: '0.8rem' }}
                 disabled={isSubmittingReport}
@@ -2680,8 +2686,14 @@ export default function Home() {
                     <button
                       type="button"
                       onClick={() => {
-                        resetQuestionnaire();
-                        setAuthViewMode('select');
+                        const emailVal = qEmail || '사내 이메일';
+                        const confirmClose = window.confirm(
+                          `📧 ${emailVal}로 보고서 메일(PDF 첨부)이 정상 발송되었습니다.\n\n수신된 메일에 '답장(회신)'을 누르시고, [사고 현장 사진 및 증빙 자료]를 첨부한 뒤 사내 사고 보고 체계에 맞춰 관련 수신 참조인을 지정하여 발송해 주세요.\n\n사고 접수 신청서 창을 닫으시겠습니까?`
+                        );
+                        if (confirmClose) {
+                          resetQuestionnaire();
+                          setAuthViewMode('select');
+                        }
                       }}
                       className="btn btn-primary"
                       style={{ padding: '12px 32px', fontWeight: 700 }}
