@@ -605,8 +605,8 @@ export default function Home() {
           body: JSON.stringify({
             ...payload,
             reportId: saveDataResult.id,
-            aiReportText: cleanReport
-          }),
+            aiReportText: cleanReport,
+            emailSentStatus: 'N'}),
         });
       } catch (saveReportErr) {
         console.error('Failed to sync AI report to spreadsheet:', saveReportErr);
@@ -617,6 +617,21 @@ export default function Home() {
     } finally {
       setIsSubmittingReport(false);
       setIsGeneratingAIReport(false);
+    }
+  };
+
+  const triggerEmailSend = async (targetId) => {
+    try {
+      await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reportId: targetId,
+          emailSentStatus: 'Y'
+        })
+      });
+    } catch (err) {
+      console.error('Failed to trigger email send status update:', err);
     }
   };
 
@@ -1841,12 +1856,13 @@ export default function Home() {
               <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text)' }}>📋 통합 사고접수 신청서</h2>
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                         const emailVal = qEmail || '사내 이메일';
                         const confirmClose = window.confirm(
                           `📧 ${emailVal}로 보고서 메일(PDF 첨부)이 정상 발송되었습니다.\n\n수신된 메일에 '답장(회신)'을 누르시고, [사고 현장 사진 및 증빙 자료]를 첨부한 뒤 사내 사고 보고 체계에 맞춰 관련 수신 참조인을 지정하여 발송해 주세요.\n\n사고 접수 신청서 창을 닫으시겠습니까?`
                         );
                         if (confirmClose) {
+                          await triggerEmailSend(currentReportId);
                           resetQuestionnaire();
                           setAuthViewMode('select');
                         }
@@ -2686,12 +2702,13 @@ export default function Home() {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={async () => {
                         const emailVal = qEmail || '사내 이메일';
                         const confirmClose = window.confirm(
                           `📧 ${emailVal}로 보고서 메일(PDF 첨부)이 정상 발송되었습니다.\n\n수신된 메일에 '답장(회신)'을 누르시고, [사고 현장 사진 및 증빙 자료]를 첨부한 뒤 사내 사고 보고 체계에 맞춰 관련 수신 참조인을 지정하여 발송해 주세요.\n\n사고 접수 신청서 창을 닫으시겠습니까?`
                         );
                         if (confirmClose) {
+                          await triggerEmailSend(currentReportId);
                           resetQuestionnaire();
                           setAuthViewMode('select');
                         }

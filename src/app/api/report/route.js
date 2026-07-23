@@ -62,7 +62,8 @@ const HEADERS = [
   '사고 발생가능성',
   '사고 위험등급',
   '인명 피해 상세 내용',
-  'AI 보고서 내용'
+  'AI 보고서 내용',
+  '이메일 발송 여부'
 ];
 
 export async function POST(request) {
@@ -254,7 +255,8 @@ export async function POST(request) {
       body.qRiskProbability || '',
       body.qRiskRating || '',
       body.qHumanInjuryDetails || '',
-      body.aiReportText || ''
+      body.aiReportText || '',
+      body.emailSentStatus || 'N'
     ];
 
     // 5. 시트에 데이터 추가 또는 업데이트
