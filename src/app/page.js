@@ -246,7 +246,7 @@ export default function Home() {
   // ── 신규 사고접수 설문지 상태 ──
   const [authViewMode, setAuthViewMode] = useState('select'); // 'select' | 'login' | 'report'
   const [reportStep, setReportStep] = useState(1); // 1, 2, 3
-  const [qEmail, setQEmail] = useState('@hansol.com');
+  const [qEmail, setQEmail] = useState('');
   const [qName, setQName] = useState('');
   const [qSalesDept, setQSalesDept] = useState('');
   const [qOpsDept, setQOpsDept] = useState('');
@@ -345,7 +345,7 @@ export default function Home() {
     setCurrentReportId(null);
     setAiReportText('');
     setIsGeneratingAIReport(false);
-    setQEmail('@hansol.com');
+    setQEmail('');
     setQName('');
     setQSalesDept('');
     setQOpsDept('');
@@ -1861,20 +1861,25 @@ export default function Home() {
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '12px' }}>
                         <div>
                           <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-muted)' }}>사내 이메일 주소 <span style={{ color: 'var(--danger)' }}>*</span></label>
-                          <input
-                            type="text"
-                            value={qEmail}
-                            onChange={(e) => setQEmail(e.target.value)}
-                            onBlur={(e) => {
-                              const val = e.target.value.trim();
-                              if (val && !val.includes('@')) {
-                                setQEmail(val + '@hansol.com');
-                              }
-                            }}
-                            placeholder="아이디 입력 (예: hong.gildong 또는 hong.gildong@hansol.com)"
-                            style={{ width: '100%', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', outline: 'none' }}
-                            required
-                          />
+                          <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden', background: 'white' }}>
+                            <input
+                              type="text"
+                              value={qEmail.endsWith('@hansol.com') ? qEmail.replace(/@hansol\.com$/, '') : qEmail}
+                              onChange={(e) => {
+                                let val = e.target.value.trim();
+                                if (val.includes('@')) {
+                                  val = val.split('@')[0];
+                                }
+                                setQEmail(val ? `${val}@hansol.com` : '');
+                              }}
+                              placeholder="사내 아이디 입력 (예: hong.gildong)"
+                              style={{ flex: 1, padding: '12px', border: 'none', outline: 'none', fontSize: '0.9rem', fontFamily: 'inherit' }}
+                              required
+                            />
+                            <span style={{ padding: '12px 16px', background: '#f1f5f9', color: '#64748b', fontWeight: 700, fontSize: '0.88rem', borderLeft: '1px solid var(--border)', userSelect: 'none' }}>
+                              @hansol.com
+                            </span>
+                          </div>
                         </div>
                         <div>
                           <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: '6px', color: 'var(--text-muted)' }}>작성자 이름 <span style={{ color: 'var(--danger)' }}>*</span></label>
