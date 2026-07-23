@@ -2701,29 +2701,69 @@ export default function Home() {
                  {reportStep === 4 && (
                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflow: 'hidden' }}>
                      {isGeneratingAIReport ? (
-                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '340px', gap: '16px' }}>
-                         <div className="spinner" />
-                         <div style={{ fontWeight: 700, color: 'var(--text)', fontSize: '1.05rem' }}>Gemini가 전문 사고보고서 초안을 작성하고 있습니다...</div>
-                         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>구글 시트에 사고접수 저장을 완료하고 AI 보고서를 생성하는 중입니다.</div>
-                       </div>
-                     ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '340px', gap: '16px' }}>
+                          <div className="spinner" />
+                          <div style={{ fontWeight: 700, color: 'var(--text)', fontSize: '1.05rem', minHeight: '28px', transition: 'all 0.3s' }}>{loadingMessage}</div>
+                          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>구글 시트에 사고접수 저장을 완료하고 AI 보고서를 생성하는 중입니다.</div>
+                        </div>
+                      ) : (
                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%' }}>
                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', order: 1, background: '#f0fdf4', padding: '20px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                               <span style={{ fontSize: '0.95rem', fontWeight: 800, color: '#166534' }}>
                                 🎉 사고접수 및 AI 보고서 생성이 완료되었습니다! (접수 ID: {currentReportId})
                               </span>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(aiReportText);
-                                  alert('보고서 내용이 클립보드에 복사되었습니다.');
-                                }}
-                                className="btn btn-success"
-                                style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '6px' }}
-                              >
-                                📋 보고서 전체 복사
-                              </button>
+                              <div style={{ display: 'flex', gap: '8px' }}>
+                                <style>{`
+                                  @media print {
+                                    /* 헤더, 네비게이션바, 버튼 등 모든 웹 인터페이스 요소 가림 */
+                                    aside, 
+                                    header, 
+                                    nav, 
+                                    button, 
+                                    .no-print,
+                                    div[style*="background: #f0fdf4"], 
+                                    div[style*="order: 1"],
+                                    div[style*="display: flex; gap: 8px"] {
+                                      display: none !important;
+                                    }
+                                    
+                                    /* 오직 순수 보고서 내용물 카드만 화면 전체에 꽉 차도록 확장 */
+                                    div[style*="order: 2"] {
+                                      border: none !important;
+                                      box-shadow: none !important;
+                                      padding: 0 !important;
+                                      margin: 0 !important;
+                                      max-height: none !important;
+                                      overflow: visible !important;
+                                    }
+                                    
+                                    body {
+                                      background: white !important;
+                                      color: black !important;
+                                    }
+                                  }
+                                `}</style>
+                                <button
+                                  type="button"
+                                  onClick={() => window.print()}
+                                  className="btn btn-primary"
+                                  style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '6px', background: 'var(--primary)' }}
+                                >
+                                  🖨️ 보고서 인쇄 (PDF)
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(aiReportText);
+                                    alert('보고서 내용이 클립보드에 복사되었습니다.');
+                                  }}
+                                  className="btn btn-success"
+                                  style={{ padding: '6px 12px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px', borderRadius: '6px' }}
+                                >
+                                  📋 보고서 전체 복사
+                                </button>
+                              </div>
                             </div>
                             <p style={{ fontSize: '0.85rem', color: '#14532d', margin: 0, lineHeight: 1.5 }}>
                               📧 입력하신 사내 이메일 <strong>({qEmail})</strong>로 <strong>PDF 보고서 자동 발송이 접수 완료</strong>되었습니다. (1분 이내 메일 수신)<br />
