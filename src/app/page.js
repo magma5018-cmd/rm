@@ -578,6 +578,11 @@ export default function Home() {
         causeClassification: qCarriageType === 'international' ? `${qIntlCauseCategory} > ${qIntlCauseDetail}` : qDomCause,
         // 경위 및 증빙
         qDetails,
+        qDetailsWho,
+        qDetailsWhen,
+        qDetailsWhere,
+        qDetailsWhat,
+        qDetailsHow,
         driveUrl
       };
 
