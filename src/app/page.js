@@ -1926,7 +1926,7 @@ export default function Home() {
                           `📧 입력하신 이메일(${emailVal})로 PDF 보고서 자동 발송이 정상 접수되었습니다.\n\n수신 메일에 '답장(회신)'을 누르시고 [사고 현장 사진 및 증빙 자료]를 첨부한 뒤, 사내보고 체계 수신인 및 참조인을 지정하여 전송해 주셔야 접수가 최종 완료됩니다.\n\n사고 접수 신청서 창을 닫으시겠습니까?`
                         );
                         if (confirmClose) {
-                          
+                          alert('📧 사고 보고서 접수 및 메일 발송 신청이 정상 완료되었습니다!');
                           resetQuestionnaire();
                           setAuthViewMode('select');
                         }
@@ -2772,7 +2772,7 @@ export default function Home() {
                           `📧 입력하신 이메일(${emailVal})로 PDF 보고서 자동 발송이 정상 접수되었습니다.\n\n수신 메일에 '답장(회신)'을 누르시고 [사고 현장 사진 및 증빙 자료]를 첨부한 뒤, 사내보고 체계 수신인 및 참조인을 지정하여 전송해 주셔야 접수가 최종 완료됩니다.\n\n사고 접수 신청서 창을 닫으시겠습니까?`
                         );
                         if (confirmClose) {
-                          
+                          alert('📧 사고 보고서 접수 및 메일 발송 신청이 정상 완료되었습니다!');
                           resetQuestionnaire();
                           setAuthViewMode('select');
                         }
