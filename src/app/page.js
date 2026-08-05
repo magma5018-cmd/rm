@@ -242,6 +242,38 @@ export default function Home() {
   // 로그인 상태
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
+
+  // ── 주간보고서 (팀장 보고용) 상태 ──
+  const [weekOffsetReport, setWeekOffsetReport] = useState(0);
+  const [nextWeekWork, setNextWeekWork] = useState('');
+  const [weeklyAISummary, setWeeklyAISummary] = useState('');
+  const [isGeneratingWeeklyAI, setIsGeneratingWeeklyAI] = useState(false);
+  const [excludedMajorAccidentIds, setExcludedMajorAccidentIds] = useState([]);
+  const [showExcludeSelector, setShowExcludeSelector] = useState(false);
+
+  const handleToggleExcludeAccident = (id) => {
+    setExcludedMajorAccidentIds(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('excluded_major_accident_ids', JSON.stringify(next));
+      }
+      return next;
+    });
+  };
+
+  // 로컬스토리지 복구
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('weekly_report_next_week_work');
+      if (saved) setNextWeekWork(saved);
+      const savedExcluded = localStorage.getItem('excluded_major_accident_ids');
+      if (savedExcluded) {
+        try {
+          setExcludedMajorAccidentIds(JSON.parse(savedExcluded));
+        } catch (e) {}
+      }
+    }
+  }, []);
   
   // ── 신규 사고접수 설문지 상태 ──
   const [authViewMode, setAuthViewMode] = useState('select'); // 'select' | 'login' | 'report'
@@ -761,6 +793,169 @@ export default function Home() {
   const [insRows, setInsRows] = useState([]);
   const [checkedIns, setCheckedIns] = useState(new Set());
   const [insDeleteMode, setInsDeleteMode] = useState(false);
+
+  // ── 주간보고서 (팀장 보고용) 데이터 연산 ──
+  const getWeekRange = (offset) => {
+    const current = new Date();
+    const day = current.getDay();
+    const distanceToMonday = day === 0 ? -6 : 1 - day;
+    
+    const monday = new Date(current);
+    monday.setDate(current.getDate() + distanceToMonday + (offset * 7));
+    monday.setHours(0, 0, 0, 0);
+    
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+    
+    return {
+      monday: monday.toISOString().split('T')[0],
+      sunday: sunday.toISOString().split('T')[0],
+      label: `${monday.getMonth() + 1}월 ${Math.ceil(monday.getDate() / 7)}주차 (${monday.toISOString().split('T')[0]} ~ ${sunday.toISOString().split('T')[0]})`
+    };
+  };
+
+  const reportWeekRange = useMemo(() => {
+    return getWeekRange(weekOffsetReport);
+  }, [weekOffsetReport]);
+
+  const newAccidents = useMemo(() => {
+    return rows.filter(r => {
+      if (!r.사고일) return false;
+      return r.사고일 >= reportWeekRange.monday && r.사고일 <= reportWeekRange.sunday;
+    }).sort((a, b) => (b.사고일 || '').localeCompare(a.사고일 || ''));
+  }, [rows, reportWeekRange]);
+
+  const newAccidentsTotalAmount = useMemo(() => {
+    return newAccidents.reduce((sum, r) => sum + parseNum(r.사고액), 0);
+  }, [newAccidents]);
+
+  const completedAccidents = useMemo(() => {
+    return rows.filter(r => {
+      if (!r.완료보고?.startsWith('완료') || !r.완료보고일) return false;
+      return r.완료보고일 >= reportWeekRange.monday && r.완료보고일 <= reportWeekRange.sunday;
+    }).sort((a, b) => (b.완료보고일 || b.사고일 || '').localeCompare(a.완료보고일 || a.사고일 || ''));
+  }, [rows, reportWeekRange]);
+
+  const completedAccidentsTotalRecov = useMemo(() => {
+    return completedAccidents.reduce((sum, r) => sum + parseNum(r.회수액), 0);
+  }, [completedAccidents]);
+
+  const completedAccidentsTotalLoss = useMemo(() => {
+    return completedAccidents.reduce((sum, r) => sum + parseNum(r.손실액), 0);
+  }, [completedAccidents]);
+
+  const allMajorAccidents = useMemo(() => {
+    return rows.filter(r => {
+      if (r.완료보고?.startsWith('완료')) return false;
+      return parseNum(r.사고액) >= 10000000;
+    }).sort((a, b) => (b.사고일 || '').localeCompare(a.사고일 || ''));
+  }, [rows]);
+
+  const majorAccidents = useMemo(() => {
+    return allMajorAccidents.filter(r => !excludedMajorAccidentIds.includes(r.id));
+  }, [allMajorAccidents, excludedMajorAccidentIds]);
+
+  const expiringInsurances = useMemo(() => {
+    return insRows.filter(r => {
+      if (!r['보험 종료일']) return false;
+      if (r['상태'] === '계약해지(보관)' || r['상태'] === '만기/종료됨') return false;
+      const diff = Math.ceil((new Date(r['보험 종료일']) - new Date()) / (1000 * 60 * 60 * 24));
+      return diff >= 0 && diff <= 90;
+    }).sort((a, b) => (b['보험 종료일'] || '').localeCompare(a['보험 종료일'] || ''));
+  }, [insRows]);
+
+  const handleCopyText = () => {
+    const reportText = `[주간보고] 물류 사고 및 보험 현황 보고 (${reportWeekRange.label.split(' (')[0]})
+
+1. 이번 주 발생 사고 현황
+- 신규 발생 건수: 총 ${newAccidents.length}건
+- 총 사고 규모 (사고액): ${newAccidentsTotalAmount.toLocaleString()}원
+
+${newAccidents.map(r => `- [${r.부서 || r.사업부 || '-'}/${r.담당자}] ${r.사고명}: ₩${r.사고액 || '0'} (진행상태: ${r.완료보고 || '미완료'})`).join('\n') || '- 발생 사고 없음'}
+
+2. 완료(종결) 사고 현황
+- 종결 처리 건수: 총 ${completedAccidents.length}건
+- 최종 회수 총액: ${completedAccidentsTotalRecov.toLocaleString()}원 (최종 순손실: ${completedAccidentsTotalLoss.toLocaleString()}원)
+
+${completedAccidents.map(r => {
+  const lastProg = r.진행경과 && r.진행경과.length > 0 ? r.진행경과[r.진행경과.length - 1] : null;
+  const progStr = lastProg ? `\n  * 진행상황: [${lastProg.date}] ${lastProg.text}` : '\n  * 진행상황: 기록 없음';
+  return `- [${r.부서 || r.사업부 || '-'}/${r.담당자}] ${r.사고명}: 배상 ₩${r.배상액 || '0'} / 회수 ₩${r.회수액 || '0'} / 손실 ₩${r.손실액 || '0'} (완료방법: ${r.완료방법 || '-'})${progStr}`;
+}).join('\n') || '- 종결 사고 없음'}
+
+3. 주요사고 진행사항 (사고액 1,000만 원 이상 진행중 사고)
+- 1천만 원 이상 진행 중인 주요 사고: 총 ${majorAccidents.length}건
+
+${majorAccidents.map(r => {
+  const lastProg = r.진행경과 && r.진행경과.length > 0 ? r.진행경과[r.진행경과.length - 1] : null;
+  return `- 사고일: ${r.사고일 || '-'} | 화주: ${r.실화주 || r.고객사 || '-'} | ${r.사고명} | 부서: ${r.부서 || r.사업부 || '-'} | ₩${r.사고액 || '0'}\n  * 현재진행: ${lastProg ? `[${lastProg.date}] ${lastProg.text}` : '기록 없음'}`;
+}).join('\n') || '- 주요 진행중 사고 없음'}
+
+4. 보험 계약 및 만기/갱신 예정 현황 (D-90일 이내)
+- 90일 이내 갱신 대상 보험: 총 ${expiringInsurances.length}건
+
+${expiringInsurances.map(r => {
+  const diffDays = Math.ceil((new Date(r['보험 종료일']) - new Date()) / (1000 * 60 * 60 * 24));
+  const dDayStr = diffDays < 0 ? `만기경과 (D+${Math.abs(diffDays)})` : `D-${diffDays}`;
+  return `- [${r.구분 || '본사'}] ${r.보험명} (${r.보험사}) | 보험료: ₩${r.보험료금액 || '-'} | 기간: ${r['보험 시작일']}~${r['보험 종료일']} (${dDayStr})\n  * 보상내용: ${r.보상내용 || '-'}`;
+}).join('\n') || '- 대상 보험 없음'}
+
+5. 차주 주요 업무 진행 사항
+${nextWeekWork || '- 입력된 업무 계획이 없습니다.'}`;
+
+    navigator.clipboard.writeText(reportText)
+      .then(() => alert('📋 메일/메신저용 텍스트 복사가 완료되었습니다. 붙여넣기(Ctrl+V) 하세요!'))
+      .catch(err => alert('복사 실패: ' + err.message));
+  };
+
+  const handleCopyHtml = () => {
+    const element = document.getElementById('weekly-report-content');
+    if (!element) return;
+    const html = element.innerHTML;
+    const blob = new Blob([html], { type: 'text/html' });
+    const textBlob = new Blob([element.innerText], { type: 'text/plain' });
+    const data = [new ClipboardItem({ 'text/html': blob, 'text/plain': textBlob })];
+    navigator.clipboard.write(data)
+      .then(() => alert('📋 노션/워드용 표 서식 복사가 완료되었습니다. 붙여넣기(Ctrl+V) 하세요!'))
+      .catch(err => alert('복사 실패: ' + err.message));
+  };
+
+  const generateWeeklyAI = async () => {
+    setIsGeneratingWeeklyAI(true);
+    try {
+      const weeklyDataText = `[발생사고]
+${newAccidents.map(r => `- ${r.사고명} (${r.사업부}, 사고액: ${r.사고액 || '0'}원)`).join('\n')}
+
+[완료사고]
+${completedAccidents.map(r => `- ${r.사고명} (배상: ${r.배상액 || '0'}, 회수: ${r.회수액 || '0'})`).join('\n')}
+
+[중요진행중사고]
+${majorAccidents.map(r => `- ${r.사고명} (사고일: ${r.사고일}, 사고액: ${r.사고액 || '0'}원)`).join('\n')}
+
+[만기임박보험]
+${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료일']})`).join('\n')}`;
+
+      const res = await fetch('/api/ai/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isWeeklyReport: true,
+          weeklyDataText
+        })
+      });
+      const data = await res.json();
+      if (data.report) {
+        setWeeklyAISummary(data.report);
+      } else {
+        throw new Error(data.error || 'AI 응답이 비어있습니다.');
+      }
+    } catch (err) {
+      alert('AI 요약 작성 중 오류가 발생했습니다: ' + err.message);
+    } finally {
+      setIsGeneratingWeeklyAI(false);
+    }
+  };
 
   // 처리경과 모달
   const [progressModal, setProgressModal] = useState(null);
@@ -3133,6 +3328,9 @@ export default function Home() {
           <div className={`nav-item ${activeMenu === 'weekly' ? 'active' : ''}`} onClick={() => setActiveMenu('weekly')}>
             📊 주간 사고보험 리포트
           </div>
+          <div className={`nav-item ${activeMenu === 'weekly_report' ? 'active' : ''}`} onClick={() => setActiveMenu('weekly_report')}>
+            📋 주간업무
+          </div>
           <div className="nav-divider" />
           <div className="nav-section-label">사고가이드</div>
           <div className="nav-item" onClick={() => window.open('https://gemini.google.com/gem/1ATRQWnWjfGWA15d4_26QbDaIFdAlpERF?usp=sharing', '_blank')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -3169,6 +3367,7 @@ export default function Home() {
             {activeMenu === 'list' && '전사 사고 및 클레임 현황'}
             {activeMenu === 'analytics' && '사고현황 분석 대시보드'}
             {activeMenu === 'weekly' && '주간 사고보험 리포트'}
+            {activeMenu === 'weekly_report' && '주간업무'}
             {activeMenu === 'insurance' && '전사 보험가입 현황'}
           </span>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -4456,6 +4655,263 @@ export default function Home() {
               </div>
             </div>
           )}
+
+            {/* ════════ 주간보고서 (팀장 보고용) ════════ */}
+            {activeMenu === 'weekly_report' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* 컨트롤 바 */}
+                <div className="panel" style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <button className="btn btn-ghost" onClick={() => setWeekOffsetReport(w => w - 1)} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>◀ 이전주</button>
+                    <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>{reportWeekRange.label}</span>
+                    <button className="btn btn-ghost" onClick={() => setWeekOffsetReport(w => w + 1)} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>다음주 ▶</button>
+                    {weekOffsetReport !== 0 && (
+                      <button className="btn btn-ghost" style={{ fontSize: '0.8rem', color: 'var(--primary)', padding: '6px 12px' }} onClick={() => setWeekOffsetReport(0)}>이번주로</button>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px' }}>
+                    <button className="btn btn-primary" style={{ background: '#10b981', borderColor: '#10b981', fontSize: '0.85rem', padding: '8px 14px' }} onClick={handleCopyText}>📋 메일/메신저용 텍스트 복사</button>
+                    <button className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '8px 14px' }} onClick={handleCopyHtml}>📋 노션/워드용 표 복사</button>
+                    <button className="btn" style={{ background: '#8b5cf6', borderColor: '#8b5cf6', color: 'white', fontSize: '0.85rem', padding: '8px 14px' }} onClick={generateWeeklyAI} disabled={isGeneratingWeeklyAI}>
+                      {isGeneratingWeeklyAI ? '⏳ AI 작성 중...' : '⚡ AI 요약 작성'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* 주요사고 보이기/숨기기 관리 패널 (복사 HTML에서 자동 제외되도록 weekly-report-content 외부에 배치) */}
+                {allMajorAccidents.length > 0 && (
+                  <div className="panel" style={{ padding: '16px 20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => setShowExcludeSelector(!showExcludeSelector)}>
+                      <span style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        ⚙️ 주요사고 보고대상 선택 설정 ({allMajorAccidents.length - excludedMajorAccidentIds.length}건 노출 / {excludedMajorAccidentIds.length}건 숨김)
+                      </span>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 600 }}>
+                        {showExcludeSelector ? '▲ 설정 접기' : '▼ 클릭하여 노출 대상 선택하기'}
+                      </span>
+                    </div>
+                    {showExcludeSelector && (
+                      <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <p style={{ margin: '0 0 6px 0', fontSize: '0.82rem', color: '#64748b' }}>체크박스를 해제하면 이번 주 보고서의 &apos;3. 주요사고 진행사항&apos; 표 및 복사 텍스트에서 즉시 숨겨집니다.</p>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '10px' }}>
+                          {allMajorAccidents.map(acc => {
+                            const isExcluded = excludedMajorAccidentIds.includes(acc.id);
+                            return (
+                              <label key={acc.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', padding: '8px', background: isExcluded ? '#f1f5f9' : '#fff', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '0.85rem' }}>
+                                <input
+                                  type="checkbox"
+                                  checked={!isExcluded}
+                                  onChange={() => handleToggleExcludeAccident(acc.id)}
+                                  style={{ marginTop: '3px', cursor: 'pointer' }}
+                                />
+                                <div style={{ color: isExcluded ? '#94a3b8' : '#334155' }}>
+                                  <span style={{ fontWeight: 600 }}>{acc.사고일 || '일자미상'}</span> - {acc.부서 || acc.사업부 || '-'}/{acc.담당자 || '-'}<br />
+                                  <span style={{ textDecoration: isExcluded ? 'line-through' : 'none' }}>{acc.사고명}</span> ({parseNum(acc.사고액).toLocaleString()}원)
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 미리보기 에디터 영역 */}
+                <div className="panel" style={{ padding: '30px', background: 'white', border: '1px solid var(--border)', borderRadius: '12px', color: '#1e293b' }}>
+                  <div id="weekly-report-content" style={{ fontFamily: 'Pretendard, system-ui, sans-serif', lineHeight: 1.6 }}>
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 800, borderBottom: '2px solid #334155', paddingBottom: '10px', marginBottom: '20px', color: '#0f172a' }}>
+                      [주간보고] 물류 사고 및 보험 현황 보고 ({reportWeekRange.label.split(' (')[0]})
+                    </h1>
+
+                    {weeklyAISummary && (
+                      <div style={{ padding: '14px 18px', background: '#f8fafc', borderLeft: '4px solid #8b5cf6', borderRadius: '6px', marginBottom: '24px' }}>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '0.85rem', color: '#6d28d9', fontWeight: 700 }}>💡 AI 종합 요약</h4>
+                        <p style={{ margin: 0, fontSize: '0.88rem', color: '#334155', whiteSpace: 'pre-wrap' }}>{weeklyAISummary}</p>
+                      </div>
+                    )}
+
+                    {/* 1. 이번 주 발생 사고 현황 */}
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>1. 이번 주 발생 사고 현황</h2>
+                    <ul style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc', fontSize: '0.9rem', color: '#334155' }}>
+                      <li><strong>이번 주 신규 발생 건수</strong>: 총 {newAccidents.length}건</li>
+                      <li><strong>이번 주 총 사고 규모 (사고액)</strong>: {newAccidentsTotalAmount.toLocaleString()}원 (신규 발생 사고는 배상/손실액이 미정이므로 사고액 기준 표기)</li>
+                    </ul>
+                    <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
+                      <thead>
+                        <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '25%' }}>사고명</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '12%' }}>부서</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>담당자</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '18%' }}>실화주/고객사</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '13%' }}>귀책사</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '135px' }}>사고액</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>진행상태</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {newAccidents.length === 0 ? (
+                          <tr>
+                            <td colSpan="7" style={{ padding: '14px', border: '1px solid #cbd5e1', textAlign: 'center', color: '#64748b' }}>이번 주 신규 접수된 사고가 없습니다.</td>
+                          </tr>
+                        ) : newAccidents.map(r => (
+                          <tr key={r.id}>
+                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.사고명 || '-'}</td>
+                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.부서 || r.사업부 || '-'}</td>
+                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.담당자 || '-'}</td>
+                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.실화주 || r.고객사 || '-'}</td>
+                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.귀책사 || '-'}</td>
+                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', fontWeight: 600, whiteSpace: 'nowrap' }}>{r.사고액 ? `${r.사고액}원` : '0원'}</td>
+                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle' }}>{r.완료보고 || '미완료'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    {/* 2. 완료(종결) 사고 현황 */}
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>2. 완료(종결) 사고 현황</h2>
+                    <ul style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc', fontSize: '0.9rem', color: '#334155' }}>
+                      <li><strong>이번 주 종결 처리 건수</strong>: 총 {completedAccidents.length}건</li>
+                      <li><strong>이번 주 최종 회수 총액</strong>: {completedAccidentsTotalRecov.toLocaleString()}원 (최종 순손실: {completedAccidentsTotalLoss.toLocaleString()}원)</li>
+                    </ul>
+                    <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
+                      <thead>
+                        <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '20%' }}>사고명</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>부서</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '9%' }}>담당자</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '110px' }}>확정 배상액</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '110px' }}>최종 회수액</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '110px' }}>최종 순손실액</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>완료 방법</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle' }}>현재 진행 상황 (최신 진행경과 연동)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {completedAccidents.length === 0 ? (
+                          <tr>
+                            <td colSpan="8" style={{ padding: '14px', border: '1px solid #cbd5e1', textAlign: 'center', color: '#64748b' }}>이번 주 완료 처리된 사고가 없습니다.</td>
+                          </tr>
+                        ) : completedAccidents.map(r => {
+                          const lastProgress = r.진행경과 && r.진행경과.length > 0 ? r.진행경과[r.진행경과.length - 1] : null;
+                          return (
+                            <tr key={r.id}>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.사고명 || '-'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.부서 || r.사업부 || '-'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.담당자 || '-'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{r.배상액 ? `${r.배상액}원` : '0원'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{r.회수액 ? `${r.회수액}원` : '0원'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', fontWeight: 600, color: '#ef4444', whiteSpace: 'nowrap' }}>{r.손실액 ? `${r.손실액}원` : '0원'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.완료방법 || '-'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
+                                {lastProgress ? <strong>[{lastProgress.date}] {lastProgress.text}</strong> : '기록된 진행 경과 없음'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+
+                    {/* 3. 주요사고 진행사항 */}
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>3. 주요사고 진행사항 (사고액 1,000만 원 이상 진행중 사고)</h2>
+                    <ul style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc', fontSize: '0.9rem', color: '#334155' }}>
+                      <li><strong>1천만 원 이상 진행 중인 주요 사고</strong>: 총 {majorAccidents.length}건 (현재 진행 상황은 진행경과 이력 중 가장 최신 날짜의 내용이 연동됨)</li>
+                    </ul>
+                    <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
+                      <thead>
+                        <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '100px' }}>사고일</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '24%' }}>사고명</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '12%' }}>화주</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '14%' }}>부서/담당자</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '130px' }}>사고액</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle' }}>현재 진행 상황 (최신 진행경과 연동)</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {majorAccidents.length === 0 ? (
+                          <tr>
+                            <td colSpan="6" style={{ padding: '14px', border: '1px solid #cbd5e1', textAlign: 'center', color: '#64748b' }}>해당하는 대형 진행중 사고가 없습니다.</td>
+                          </tr>
+                        ) : majorAccidents.map(r => {
+                          const lastProgress = r.진행경과 && r.진행경과.length > 0 ? r.진행경과[r.진행경과.length - 1] : null;
+                          return (
+                            <tr key={r.id}>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{r.사고일 || '-'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.사고명 || '-'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.실화주 || r.고객사 || '-'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.부서 || r.사업부 || '-'} / {r.담당자 || '-'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', fontWeight: 600, whiteSpace: 'nowrap' }}>{r.사고액 ? `${r.사고액}원` : '0원'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
+                                {lastProgress ? <strong>[{lastProgress.date}] {lastProgress.text}</strong> : '기록된 진행 경과 없음'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+
+                    {/* 4. 보험 계약 및 만기/갱신 예정 현황 */}
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>4. 보험 계약 및 만기/갱신 예정 현황 (D-90일 이내)</h2>
+                    <ul style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc', fontSize: '0.9rem', color: '#334155' }}>
+                      <li><strong>향후 90일 이내 갱신 대상 보험</strong>: 총 {expiringInsurances.length}건</li>
+                    </ul>
+                    <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
+                      <thead>
+                        <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>구분</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '18%' }}>보험명</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '12%' }}>보험사</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '135px' }}>보험료</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '23%' }}>보험 기간 (시작일 ~ 종료일 / D-Day)</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle' }}>주요 내용 및 보상 한도</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {expiringInsurances.length === 0 ? (
+                          <tr>
+                            <td colSpan="6" style={{ padding: '14px', border: '1px solid #cbd5e1', textAlign: 'center', color: '#64748b' }}>90일 이내 갱신 대상 보험 계약이 없습니다.</td>
+                          </tr>
+                        ) : expiringInsurances.map(r => {
+                          const diffDays = Math.ceil((new Date(r['보험 종료일']) - new Date()) / (1000 * 60 * 60 * 24));
+                          const dDayStr = diffDays < 0 ? `만기경과 (D+${Math.abs(diffDays)})` : `D-${diffDays}`;
+                          return (
+                            <tr key={r.id}>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word', fontWeight: 600 }}>{r.구분 || '본사'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.보험명 || '-'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.보험사 || '-'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{r.보험료금액 ? `${Number(String(r.보험료금액).replace(/[^0-9]/g, '')).toLocaleString()}원` : '-'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>
+                                {r['보험 시작일']} ~ {r['보험 종료일']} <strong>({dDayStr})</strong>
+                              </td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.보상내용} / {r.보상한도 || '-'}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+
+                    {/* 5. 차주 주요 업무 진행 사항 */}
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>5. 차주 주요 업무 진행 사항</h2>
+                    <div style={{ fontSize: '0.9rem', color: '#334155', whiteSpace: 'pre-wrap', paddingLeft: '10px' }}>
+                      {nextWeekWork || '입력된 업무 계획이 없습니다.'}
+                    </div>
+                  </div>
+
+                  <div style={{ marginTop: '24px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+                    <label style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text)', display: 'block', marginBottom: '8px' }}>📝 차주 주요 업무 및 요청사항 입력 (로컬에 자동 저장됨)</label>
+                    <textarea
+                      style={{ width: '100%', height: '120px', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', resize: 'vertical' }}
+                      placeholder="다음 주 진행 업무 계획이나 팀장 결재/협조가 필요한 사항을 자유롭게 입력해 주세요."
+                      value={nextWeekWork}
+                      onChange={(e) => {
+                        setNextWeekWork(e.target.value);
+                        localStorage.setItem('weekly_report_next_week_work', e.target.value);
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
           {/* ════════ 전사 보험가입 현황 ════════ */}
           {activeMenu === 'insurance' && (
