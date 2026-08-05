@@ -881,7 +881,7 @@ ${newAccidents.map(r => `- [${r.부서 || r.사업부 || '-'}/${r.담당자}] ${
 ${completedAccidents.map(r => {
   const lastProg = r.진행경과 && r.진행경과.length > 0 ? r.진행경과[r.진행경과.length - 1] : null;
   const progStr = lastProg ? `\n  * 진행상황: [${lastProg.date}] ${lastProg.text}` : '\n  * 진행상황: 기록 없음';
-  return `- [${r.부서 || r.사업부 || '-'}/${r.담당자}] ${r.사고명}: 배상 ₩${r.배상액 || '0'} / 회수 ₩${r.회수액 || '0'} / 손실 ₩${r.손실액 || '0'} (완료방법: ${r.완료방법 || '-'})${progStr}`;
+  return `- [${r.부서 || r.사업부 || '-'}/${r.담당자}] ${r.사고명}: 사고액 ₩${r.사고액 || '0'} / 회수 ₩${r.회수액 || '0'} / 손실 ₩${r.손실액 || '0'} (완료방법: ${r.완료방법 || '-'})${progStr}`;
 }).join('\n') || '- 종결 사고 없음'}
 
 3. 주요사고 진행사항 (사고액 1,000만 원 이상 진행중 사고)
@@ -4779,7 +4779,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                           <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '20%' }}>사고명</th>
                           <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>부서</th>
                           <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '9%' }}>담당자</th>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '110px' }}>확정 배상액</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '110px' }}>사고액</th>
                           <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '110px' }}>최종 회수액</th>
                           <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '110px' }}>최종 순손실액</th>
                           <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>완료 방법</th>
@@ -4798,7 +4798,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                               <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.사고명 || '-'}</td>
                               <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.부서 || r.사업부 || '-'}</td>
                               <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.담당자 || '-'}</td>
-                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{r.배상액 ? `${r.배상액}원` : '0원'}</td>
+                              <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{r.사고액 ? `${r.사고액}원` : '0원'}</td>
                               <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{r.회수액 ? `${r.회수액}원` : '0원'}</td>
                               <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', fontWeight: 600, color: '#ef4444', whiteSpace: 'nowrap' }}>{r.손실액 ? `${r.손실액}원` : '0원'}</td>
                               <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.완료방법 || '-'}</td>
