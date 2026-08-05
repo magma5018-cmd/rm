@@ -821,9 +821,9 @@ export default function Home() {
 
   const newAccidents = useMemo(() => {
     return rows.filter(r => {
-      if (!r.사고일) return false;
-      return r.사고일 >= reportWeekRange.monday && r.사고일 <= reportWeekRange.sunday;
-    }).sort((a, b) => (b.사고일 || '').localeCompare(a.사고일 || ''));
+      if (!r.사고접수일) return false;
+      return r.사고접수일 >= reportWeekRange.monday && r.사고접수일 <= reportWeekRange.sunday;
+    }).sort((a, b) => (b.사고접수일 || '').localeCompare(a.사고접수일 || ''));
   }, [rows, reportWeekRange]);
 
   const newAccidentsTotalAmount = useMemo(() => {
@@ -872,7 +872,7 @@ export default function Home() {
 - 신규 발생 건수: 총 ${newAccidents.length}건
 - 총 사고 규모 (사고액): ${newAccidentsTotalAmount.toLocaleString()}원
 
-${newAccidents.map(r => `- [${r.부서 || r.사업부 || '-'}/${r.담당자}] ${r.사고명}: ₩${r.사고액 || '0'} (진행상태: ${r.완료보고 || '미완료'})`).join('\n') || '- 발생 사고 없음'}
+${newAccidents.map(r => `- [${r.부서 || r.사업부 || '-'}/${r.담당자}] 접수일: ${r.사고접수일 || '-'} (사고일: ${r.사고일 || '-'}) | ${r.사고명}: ₩${r.사고액 || '0'} (진행상태: ${r.완료보고 || '미완료'})`).join('\n') || '- 발생 사고 없음'}
 
 2. 완료(종결) 사고 현황
 - 종결 처리 건수: 총 ${completedAccidents.length}건
@@ -4739,22 +4739,26 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
                       <thead>
                         <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '25%' }}>사고명</th>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '12%' }}>부서</th>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>담당자</th>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '18%' }}>실화주/고객사</th>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '13%' }}>귀책사</th>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '135px' }}>사고액</th>
-                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>진행상태</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '100px' }}>사고일</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '100px' }}>사고접수일</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '20%' }}>사고명</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>부서</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '9%' }}>담당자</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '12%' }}>실화주/고객사</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>귀책사</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '120px' }}>사고액</th>
+                          <th style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '9%' }}>진행상태</th>
                         </tr>
                       </thead>
                       <tbody>
                         {newAccidents.length === 0 ? (
                           <tr>
-                            <td colSpan="7" style={{ padding: '14px', border: '1px solid #cbd5e1', textAlign: 'center', color: '#64748b' }}>이번 주 신규 접수된 사고가 없습니다.</td>
+                            <td colSpan="9" style={{ padding: '14px', border: '1px solid #cbd5e1', textAlign: 'center', color: '#64748b' }}>이번 주 신규 접수된 사고가 없습니다.</td>
                           </tr>
                         ) : newAccidents.map(r => (
                           <tr key={r.id}>
+                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{r.사고일 || '-'}</td>
+                            <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>{r.사고접수일 || '-'}</td>
                             <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.사고명 || '-'}</td>
                             <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.부서 || r.사업부 || '-'}</td>
                             <td style={{ padding: '10px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word' }}>{r.담당자 || '-'}</td>
