@@ -4794,7 +4794,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '110px', lineHeight: '1.2' }}>최종 회수액</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '110px', lineHeight: '1.2' }}>최종 순손실액</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%', lineHeight: '1.2' }}>완료 방법</th>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>현재 진행 상황 (최신 진행경과 연동)</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>최신 진행 상황</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -4836,7 +4836,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '12%', lineHeight: '1.2' }}>화주</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '14%', lineHeight: '1.2' }}>부서/담당자</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '130px', lineHeight: '1.2' }}>사고액</th>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>현재 진행 상황 (최신 진행경과 연동)</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>최신 진행 상황</th>
                         </tr>
                       </thead>
                       <tbody>
