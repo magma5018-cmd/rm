@@ -868,13 +868,16 @@ export default function Home() {
   const handleCopyText = () => {
     const reportText = `[주간보고] 물류 사고 및 보험 현황 보고 (${reportWeekRange.label.split(' (')[0]})
 
-1. 이번 주 발생 사고 현황
+1. 차주 주요 업무 진행 사항
+${nextWeekWork || '- 입력된 업무 계획이 없습니다.'}
+
+2. 이번 주 발생 사고 현황
 - 신규 발생 건수: 총 ${newAccidents.length}건
 - 총 사고 규모 (사고액): ${newAccidentsTotalAmount.toLocaleString()}원
 
 ${newAccidents.map(r => `- [${r.부서 || r.사업부 || '-'}/${r.담당자}] 접수일: ${r.사고접수일 || '-'} (사고일: ${r.사고일 || '-'}) | ${r.사고명}: ₩${r.사고액 || '0'} (진행상태: ${r.완료보고 || '미완료'})`).join('\n') || '- 발생 사고 없음'}
 
-2. 완료(종결) 사고 현황
+3. 완료(종결) 사고 현황
 - 종결 처리 건수: 총 ${completedAccidents.length}건
 - 최종 회수 총액: ${completedAccidentsTotalRecov.toLocaleString()}원 (최종 순손실: ${completedAccidentsTotalLoss.toLocaleString()}원)
 
@@ -884,7 +887,7 @@ ${completedAccidents.map(r => {
   return `- [${r.부서 || r.사업부 || '-'}/${r.담당자}] 화주: ${r.실화주 || r.고객사 || '-'} | ${r.사고명}: 사고액 ₩${r.사고액 || '0'} / 회수 ₩${r.회수액 || '0'} / 손실 ₩${r.손실액 || '0'} (완료방법: ${r.완료방법 || '-'})${progStr}`;
 }).join('\n') || '- 종결 사고 없음'}
 
-3. 주요사고 진행사항 (사고액 1,000만 원 이상 진행중 사고)
+4. 주요사고 진행사항 (사고액 1,000만 원 이상 진행중 사고)
 - 1천만 원 이상 진행 중인 주요 사고: 총 ${majorAccidents.length}건
 
 ${majorAccidents.map(r => {
@@ -892,17 +895,14 @@ ${majorAccidents.map(r => {
   return `- 사고일: ${r.사고일 || '-'} | 화주: ${r.실화주 || r.고객사 || '-'} | ${r.사고명} | 부서: ${r.부서 || r.사업부 || '-'} | ₩${r.사고액 || '0'}\n  * 현재진행: ${lastProg ? `[${lastProg.date}] ${lastProg.text}` : '기록 없음'}`;
 }).join('\n') || '- 주요 진행중 사고 없음'}
 
-4. 보험 계약 및 만기/갱신 예정 현황 (D-90일 이내)
+5. 보험 계약 및 만기/갱신 예정 현황 (D-90일 이내)
 - 90일 이내 갱신 대상 보험: 총 ${expiringInsurances.length}건
 
 ${expiringInsurances.map(r => {
   const diffDays = Math.ceil((new Date(r['보험 종료일']) - new Date()) / (1000 * 60 * 60 * 24));
   const dDayStr = diffDays < 0 ? `만기경과 (D+${Math.abs(diffDays)})` : `D-${diffDays}`;
   return `- [${r.구분 || '본사'}] ${r.보험명} (${r.보험사}) | 보험료: ₩${r.보험료금액 || '-'} | 기간: ${r['보험 시작일']}~${r['보험 종료일']} (${dDayStr})\n  * 보상내용: ${r.보상내용 || '-'}`;
-}).join('\n') || '- 대상 보험 없음'}
-
-5. 차주 주요 업무 진행 사항
-${nextWeekWork || '- 입력된 업무 계획이 없습니다.'}`;
+}).join('\n') || '- 대상 보험 없음'}`;
 
     navigator.clipboard.writeText(reportText)
       .then(() => alert('📋 메일/메신저용 텍스트 복사가 완료되었습니다. 붙여넣기(Ctrl+V) 하세요!'))
@@ -4730,8 +4730,14 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       </div>
                     )}
 
-                    {/* 1. 이번 주 발생 사고 현황 */}
-                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>1. 이번 주 발생 사고 현황</h2>
+                    {/* 1. 차주 주요 업무 진행 사항 */}
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>1. 차주 주요 업무 진행 사항</h2>
+                    <div style={{ fontSize: '0.9rem', color: '#334155', whiteSpace: 'pre-wrap', paddingLeft: '10px', marginBottom: '24px' }}>
+                      {nextWeekWork || '입력된 업무 계획이 없습니다.'}
+                    </div>
+
+                    {/* 2. 이번 주 발생 사고 현황 */}
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>2. 이번 주 발생 사고 현황</h2>
                     <ul style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc', fontSize: '0.9rem', color: '#334155' }}>
                       <li><strong>이번 주 신규 발생 건수</strong>: 총 {newAccidents.length}건</li>
                       <li><strong>이번 주 총 사고 규모 (사고액)</strong>: {newAccidentsTotalAmount.toLocaleString()}원 (신규 발생 사고는 배상/손실액이 미정이므로 사고액 기준 표기)</li>
@@ -4771,8 +4777,8 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       </tbody>
                     </table>
 
-                    {/* 2. 완료(종결) 사고 현황 */}
-                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>2. 완료(종결) 사고 현황</h2>
+                    {/* 3. 완료(종결) 사고 현황 */}
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>3. 완료(종결) 사고 현황</h2>
                     <ul style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc', fontSize: '0.9rem', color: '#334155' }}>
                       <li><strong>이번 주 종결 처리 건수</strong>: 총 {completedAccidents.length}건</li>
                       <li><strong>이번 주 최종 회수 총액</strong>: {completedAccidentsTotalRecov.toLocaleString()}원 (최종 순손실: {completedAccidentsTotalLoss.toLocaleString()}원)</li>
@@ -4817,8 +4823,8 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       </tbody>
                     </table>
 
-                    {/* 3. 주요사고 진행사항 */}
-                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>3. 주요사고 진행사항 (사고액 1,000만 원 이상 진행중 사고)</h2>
+                    {/* 4. 주요사고 진행사항 */}
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>4. 주요사고 진행사항 (사고액 1,000만 원 이상 진행중 사고)</h2>
                     <ul style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc', fontSize: '0.9rem', color: '#334155' }}>
                       <li><strong>1천만 원 이상 진행 중인 주요 사고</strong>: 총 {majorAccidents.length}건 (현재 진행 상황은 진행경과 이력 중 가장 최신 날짜의 내용이 연동됨)</li>
                     </ul>
@@ -4856,8 +4862,8 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       </tbody>
                     </table>
 
-                    {/* 4. 보험 계약 및 만기/갱신 예정 현황 */}
-                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>4. 보험 계약 및 만기/갱신 예정 현황 (D-90일 이내)</h2>
+                    {/* 5. 보험 계약 및 만기/갱신 예정 현황 */}
+                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>5. 보험 계약 및 만기/갱신 예정 현황 (D-90일 이내)</h2>
                     <ul style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc', fontSize: '0.9rem', color: '#334155' }}>
                       <li><strong>향후 90일 이내 갱신 대상 보험</strong>: 총 {expiringInsurances.length}건</li>
                     </ul>
@@ -4896,11 +4902,6 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       </tbody>
                     </table>
 
-                    {/* 5. 차주 주요 업무 진행 사항 */}
-                    <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>5. 차주 주요 업무 진행 사항</h2>
-                    <div style={{ fontSize: '0.9rem', color: '#334155', whiteSpace: 'pre-wrap', paddingLeft: '10px' }}>
-                      {nextWeekWork || '입력된 업무 계획이 없습니다.'}
-                    </div>
                   </div>
 
                   <div style={{ marginTop: '24px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
