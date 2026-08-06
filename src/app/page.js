@@ -4742,18 +4742,18 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       <li><strong>이번 주 신규 발생 건수</strong>: 총 {newAccidents.length}건</li>
                       <li><strong>이번 주 총 사고 규모 (사고액)</strong>: {newAccidentsTotalAmount.toLocaleString()}원 (신규 발생 사고는 배상/손실액이 미정이므로 사고액 기준 표기)</li>
                     </ul>
-                    <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
+                    <table style={{ width: '100%', tableLayout: 'auto', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
                       <thead>
                         <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '100px', lineHeight: '1.2' }}>사고일</th>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '100px', lineHeight: '1.2' }}>사고접수일</th>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '20%', lineHeight: '1.2' }}>사고명</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '90px', lineHeight: '1.2' }}>사고일</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '90px', lineHeight: '1.2' }}>사고접수일</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>사고명</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%', lineHeight: '1.2' }}>부서</th>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '9%', lineHeight: '1.2' }}>담당자</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '8%', lineHeight: '1.2' }}>담당자</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '12%', lineHeight: '1.2' }}>실화주/고객사</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%', lineHeight: '1.2' }}>귀책사</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '120px', lineHeight: '1.2' }}>사고액</th>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '9%', lineHeight: '1.2' }}>진행상태</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '90px', lineHeight: '1.2' }}>진행상태</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -4783,17 +4783,17 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       <li><strong>이번 주 종결 처리 건수</strong>: 총 {completedAccidents.length}건</li>
                       <li><strong>이번 주 최종 회수 총액</strong>: {completedAccidentsTotalRecov.toLocaleString()}원 (최종 순손실: {completedAccidentsTotalLoss.toLocaleString()}원)</li>
                     </ul>
-                    <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
+                    <table style={{ width: '100%', tableLayout: 'auto', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
                       <thead>
                         <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '18%', lineHeight: '1.2' }}>사고명</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>사고명</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%', lineHeight: '1.2' }}>화주</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%', lineHeight: '1.2' }}>부서</th>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '9%', lineHeight: '1.2' }}>담당자</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '8%', lineHeight: '1.2' }}>담당자</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '110px', lineHeight: '1.2' }}>사고액</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '110px', lineHeight: '1.2' }}>최종 회수액</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '110px', lineHeight: '1.2' }}>최종 순손실액</th>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%', lineHeight: '1.2' }}>완료 방법</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '12%', lineHeight: '1.2' }}>완료 방법</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>최신 진행 상황</th>
                         </tr>
                       </thead>
@@ -4828,11 +4828,11 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     <ul style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc', fontSize: '0.9rem', color: '#334155' }}>
                       <li><strong>1천만 원 이상 진행 중인 주요 사고</strong>: 총 {majorAccidents.length}건 (현재 진행 상황은 진행경과 이력 중 가장 최신 날짜의 내용이 연동됨)</li>
                     </ul>
-                    <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
+                    <table style={{ width: '100%', tableLayout: 'auto', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
                       <thead>
                         <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '100px', lineHeight: '1.2' }}>사고일</th>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '24%', lineHeight: '1.2' }}>사고명</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '90px', lineHeight: '1.2' }}>사고일</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '22%', lineHeight: '1.2' }}>사고명</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '12%', lineHeight: '1.2' }}>화주</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '14%', lineHeight: '1.2' }}>부서/담당자</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '130px', lineHeight: '1.2' }}>사고액</th>
@@ -4867,10 +4867,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     <ul style={{ paddingLeft: '20px', marginBottom: '12px', listStyleType: 'disc', fontSize: '0.9rem', color: '#334155' }}>
                       <li><strong>향후 90일 이내 갱신 대상 보험</strong>: 총 {expiringInsurances.length}건</li>
                     </ul>
-                    <table style={{ width: '100%', tableLayout: 'fixed', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
+                    <table style={{ width: '100%', tableLayout: 'auto', borderCollapse: 'collapse', marginBottom: '24px', fontSize: '0.88rem' }}>
                       <thead>
                         <tr style={{ background: '#f1f5f9', borderBottom: '2px solid #cbd5e1' }}>
-                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '10%', lineHeight: '1.2' }}>구분</th>
+                          <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '8%', lineHeight: '1.2' }}>구분</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '18%', lineHeight: '1.2' }}>보험명</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '12%', lineHeight: '1.2' }}>보험사</th>
                           <th style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', width: '135px', lineHeight: '1.2' }}>보험료</th>
