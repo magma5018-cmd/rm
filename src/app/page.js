@@ -1255,9 +1255,9 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
           } else if (status === '완료 (클레임 없음)') {
             updated['손실액'] = '0';
           } else {
-            const occur = parseAmount(updated['사고액']);
-            const comp = parseAmount(updated['배상액']);
-            const recov = parseAmount(updated['회수액']);
+            const occur = parseNum(updated['사고액']);
+            const comp = parseNum(updated['배상액']);
+            const recov = parseNum(updated['회수액']);
             // 배상액이 입력되었으면 배상액을 기준으로 계산하고, 없으면 사고액을 기준으로 계산합니다.
             const baseAmount = comp > 0 ? comp : occur;
             const calcLoss = baseAmount - recov;
