@@ -1247,12 +1247,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
     setRows(prev => prev.map(r => {
       if (r.id === id) {
         const updated = { ...r, [field]: value };
-        // 금액 관련 필드나 완료보고 상태가 수정되면 손실액 자동 계산 (단, 완료보고가 '완료 (클레임 없음)'이거나 미완료인 경우 손실액은 0원)
+        // 금액 관련 필드나 완료보고 상태가 수정되면 손실액 자동 계산 (단, 완료보고가 '완료 (클레임 없음)'인 경우 손실액은 0원)
         if (['사고액', '배상액', '회수액', '자기부담금', '완료보고'].includes(field)) {
           const status = updated['완료보고'] || '미완료';
-          if (!status.startsWith('완료')) {
-            updated['손실액'] = '0';
-          } else if (status === '완료 (클레임 없음)') {
+          if (status === '완료 (클레임 없음)') {
             updated['손실액'] = '0';
           } else {
             const occur = parseNum(updated['사고액']);
