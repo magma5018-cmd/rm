@@ -4724,14 +4724,26 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     {weeklyAISummary && (
                       <div style={{ padding: '14px 18px', background: '#f8fafc', borderLeft: '4px solid #8b5cf6', borderRadius: '6px', marginBottom: '24px' }}>
                         <h4 style={{ margin: '0 0 6px 0', fontSize: '0.85rem', color: '#6d28d9', fontWeight: 700 }}>💡 AI 종합 요약</h4>
-                        <p style={{ margin: 0, fontSize: '0.88rem', color: '#334155', whiteSpace: 'pre-wrap' }}>{weeklyAISummary}</p>
+                        <p style={{ margin: 0, fontSize: '0.88rem', color: '#334155', whiteSpace: 'pre-wrap' }}>
+                          {weeklyAISummary.split('\n').map((line, idx) => (
+                            <React.Fragment key={idx}>
+                              {line}
+                              {idx < weeklyAISummary.split('\n').length - 1 && <br />}
+                            </React.Fragment>
+                          ))}
+                        </p>
                       </div>
                     )}
 
                     {/* 1. 차주 주요 업무 진행 사항 */}
                     <h2 style={{ fontSize: '1.15rem', fontWeight: 700, marginTop: '24px', marginBottom: '12px', color: '#1e293b' }}>1. 차주 주요 업무 진행 사항</h2>
                     <div style={{ fontSize: '0.9rem', color: '#334155', whiteSpace: 'pre-wrap', paddingLeft: '10px', marginBottom: '24px' }}>
-                      {nextWeekWork || '입력된 업무 계획이 없습니다.'}
+                      {nextWeekWork ? nextWeekWork.split('\n').map((line, idx) => (
+                        <React.Fragment key={idx}>
+                          {line}
+                          {idx < nextWeekWork.split('\n').length - 1 && <br />}
+                        </React.Fragment>
+                      )) : '입력된 업무 계획이 없습니다.'}
                     </div>
 
                     {/* 2. 이번 주 발생 사고 현황 */}
