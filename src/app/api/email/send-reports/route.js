@@ -8,6 +8,8 @@ export async function POST(req) {
     const {
       senderName = '사고관리시스템',
       fromEmail,
+      toEmail,
+      toEmails = [],
       bccEmail,
       aiGmail,
       smtpHost,
@@ -21,10 +23,19 @@ export async function POST(req) {
       return NextResponse.json({ success: false, error: '이메일 설정 및 메일 서버 주소를 확인해주세요.' }, { status: 400 });
     }
 
+    // 설정 화면의 수신인(To) 이메일 목록 전체 정리 (mhs810@hansol.com, magma5018@gmail.com 등)
+    let globalRecipients = [];
+    if (Array.isArray(toEmails) && toEmails.length > 0) {
+      globalRecipients = toEmails.map(s => typeof s === 'string' ? s.trim() : (s.email || '')).filter(s => s && s.includes('@'));
+    }
+    if (toEmail && typeof toEmail === 'string' && toEmail.includes('@') && !globalRecipients.includes(toEmail.trim())) {
+      globalRecipients.push(toEmail.trim());
+    }
+
     // 1. 발송 대상 사고 건 추출
     let targetRows = Array.isArray(rows) ? rows.filter(r => (r.autoEmail !== 'N') && r.managerEmail && r.managerEmail.includes('@')) : [];
 
-    // 만약 넘어온 사고 데이터가 없거나 비어있으면 구글 시트에서 직접 최신 사고 건들을 읽어옴!
+    // 사고 데이터가 없으면 시트에서 최신 사고 건들을 읽어옴!
     if (targetRows.length === 0 && sheetId) {
       try {
         const sheetRes = await sheets.spreadsheets.values.get({
@@ -41,12 +52,12 @@ export async function POST(req) {
           };
           targetRows = accRows.map(r => ({
             사고번호: getVal(r, '사고번호') || r[1] || '20260831-1',
-            사고명: getVal(r, '사고명') || r[11] || '테스트 컨테이너 전복사고',
+            사고명: getVal(r, '사고명') || r[11] || '컨테이너 바나나 미끄러짐 사고',
             사고일: getVal(r, '사고일') || r[2] || '2026-08-31',
-            사업부: getVal(r, '사업부') || r[5] || '지혁부',
-            부서: getVal(r, '부서') || r[6] || 'rm팀',
+            사업부: getVal(r, '사업부') || r[5] || '지원혁신',
+            부서: getVal(r, '부서') || r[6] || 'rm',
             담당자: getVal(r, '담당자') || r[7] || '마형석',
-            사고내용: getVal(r, '사고내용') || r[12] || '컨테이너가 도로로 지나가다 바나나를 밟아 넘어졌다',
+            사고내용: getVal(r, '사고내용') || r[12] || '고속도로에서 바나나를 밟고 미끄러져 전복됨',
             managerEmail: getVal(r, '담당자 이메일') || r[56] || fromEmail,
             autoEmail: 'Y'
           }));
@@ -56,16 +67,15 @@ export async function POST(req) {
       }
     }
 
-    // 2. 만약 여전히 비어있으면 기본 가상 사고 리포트를 생성하여 보냄
     if (targetRows.length === 0) {
       targetRows = [{
         사고번호: '20260831-1',
-        사고명: '테스트 컨테이너 전복사고',
+        사고명: '컨테이너 바나나 미끄러짐 사고',
         사고일: '2026-08-31',
-        사업부: '지혁부',
-        부서: 'rm팀',
+        사업부: '지원혁신',
+        부서: 'rm',
         담당자: '마형석',
-        사고내용: '컨테이너가 도로로 지나가다 바나나를 밟아 넘어졌다',
+        사고내용: '고속도로에서 바나나를 밟고 미끄러져 전복됨',
         managerEmail: fromEmail,
         autoEmail: 'Y'
       }];
@@ -86,11 +96,11 @@ export async function POST(req) {
 
     for (const row of targetRows) {
       const accNo = row.사고번호 || '20260831-1';
-      const accTitle = row.사고명 || '테스트 컨테이너 전복사고';
+      const accTitle = row.사고명 || '컨테이너 바나나 미끄러짐 사고';
       const accDate = row.사고일 || '2026-08-31';
-      const accDept = (row.사업부 || '지혁부') + ' ' + (row.부서 || 'rm팀');
+      const accDept = (row.사업부 || '지원혁신') + ' ' + (row.부서 || 'rm');
       const accManager = row.담당자 || '마형석';
-      const accContent = row.사고내용 || '컨테이너가 도로로 지나가다 바나나를 밟아 넘어졌다';
+      const accContent = row.사고내용 || '고속도로에서 바나나를 밟고 미끄러져 전복됨';
       const aiReportText = row['AI 보고서 내용'] || row.aiReportText || 
         '1. 사고 원인 분석: 운송 중 도로 장애물(바나나 미끄러짐)로 인한 컨테이너 궤도 이탈 및 쏠림 현상 발생.\n' +
         '2. 귀책 판정: 과속 여부 및 도로 환경 요인 종합 조사 예정 (운송사 귀책 60%, 과실 40% 추정).\n' +
@@ -132,11 +142,20 @@ export async function POST(req) {
         '</div>' +
       '</div>';
 
-      const recipient = (row.managerEmail && row.managerEmail.includes('@')) ? row.managerEmail.trim() : fromEmail;
+      // 사고 담당자 이메일 + 설정 화면의 수신인(To) 이메일 전체 목록을 100% 통합
+      const finalRecipientsSet = new Set(globalRecipients);
+      if (row.managerEmail && row.managerEmail.includes('@')) {
+        finalRecipientsSet.add(row.managerEmail.trim());
+      }
+      if (finalRecipientsSet.size === 0) {
+        finalRecipientsSet.add(fromEmail);
+      }
+
+      const finalRecipientsStr = Array.from(finalRecipientsSet).join(', ');
 
       const mailOptions = {
         from: '"' + senderName + '" <' + fromEmail + '>',
-        to: recipient,
+        to: finalRecipientsStr,
         replyTo: aiGmail || fromEmail,
         subject: '[사고 리포트] ' + accNo + ' - ' + accTitle,
         html: mailHtml
@@ -152,11 +171,11 @@ export async function POST(req) {
 
     return NextResponse.json({
       success: true,
-      message: '총 ' + sentCount + '건의 실제 사고 리포트 메일이 성공적으로 발송되었습니다.'
+      message: '총 ' + sentCount + '건의 사고 리포트가 수신인 목록 전체에게 발송되었습니다.'
     });
 
   } catch (error) {
-    console.error('Real Email Route Error:', error);
+    console.error('All Recipients Send Error:', error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

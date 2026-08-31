@@ -5435,12 +5435,14 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                                 ...emailSettings,
                                 smtpHost: 'smtp.gmail.com',
                                 smtpPort: '587',
-                                fromEmail: row.managerEmail,
+                                fromEmail: emailSettings.aiGmail || 'magma5018@gmail.com',
+                                toEmails: recipientsList,
                                 accidentNo: row.사고번호,
                                 accidentName: row.사고명,
                                 aiGmail: emailSettings.aiGmail || 'magma5018@gmail.com',
                                 username: emailSettings.aiGmail || 'magma5018@gmail.com',
-                                password: emailSettings.gmailAppPassword || 'gojffulntemnfqfy'
+                                password: emailSettings.gmailAppPassword || 'gojffulntemnfqfy',
+                                rows: [row]
                               })
                             });
                             const data = await res.json();
