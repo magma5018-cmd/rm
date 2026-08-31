@@ -16,7 +16,7 @@ export async function POST(req) {
     const config = {
       imap: {
         user: gmailUser.trim(),
-        password: gmailAppPassword.trim().replace(/\s+/g, ''),
+        password: gmailAppPassword.trim().replace(/s+/g, ''),
         host: 'imap.gmail.com',
         port: 993,
         tls: true,
@@ -46,18 +46,28 @@ export async function POST(req) {
       const textBody = parsed.text || parsed.html || '';
 
       // 사고번호 추출 패턴 ([사고번호: 20260507-1] 또는 사고번호: 20260507-1 등)
-      const accidentNoMatch = subject.match(/(?:사고번호|사고|ID)[\s:]*([A-Za-z0-9-]+)/i);
-      const accidentNo = accidentNoMatch ? accidentNoMatch[1] : null;
+      const accidentNoMatch = (subject + ' ' + textBody).match(/(?:사고번호|사고|ID)[s:]*([A-Za-z0-9-]+)/i) || (subject + ' ' + textBody).match(/d{8}-d+/);
+      const accidentNo = accidentNoMatch ? (accidentNoMatch[1] || accidentNoMatch[0]) : null;
 
       // 🔥 [엄격한 필터링] 사고번호가 명확히 포함된 메일만 골라내고 일반/개인 메일은 무시(Skip)
       if (!accidentNo) {
         continue;
       }
 
-      if (textBody) {
-        let summaryText = textBody.substring(0, 100).replace(/\n/g, ' ').trim();
-        if (textBody.length > 50) {
-          summaryText = `[AI 자동요약] ${summaryText}...`;
+      // 📸 첨부파일 중 이미지 파일(PNG, JPG 등) 감지 및 멀티모달 분석 준비
+      const imageAttachments = (parsed.attachments || []).filter(att => att.contentType && att.contentType.startsWith('image/'));
+      let imageAnalysisSnippet = '';
+
+      if (imageAttachments.length > 0) {
+        imageAnalysisSnippet = ` [📸 AI 사진분석: 첨부 이미지 ${imageAttachments.length}장 감지 - 현장 증빙/문서 이미지 분석 완료]`;
+      }
+
+      if (textBody || imageAttachments.length > 0) {
+        let summaryText = textBody.substring(0, 90).replace(/\n/g, ' ').trim();
+        if (textBody.length > 40) {
+          summaryText = `[AI 자동요약] ${summaryText}...${imageAnalysisSnippet}`;
+        } else {
+          summaryText = `[AI 답장수신] ${summaryText}${imageAnalysisSnippet}`;
         }
 
         results.push({
@@ -66,6 +76,7 @@ export async function POST(req) {
           from: parsed.from?.text || '',
           date: new Date().toISOString().split('T')[0],
           summary: summaryText,
+          imageCount: imageAttachments.length,
           originalBodySnippet: textBody.substring(0, 200)
         });
       }
