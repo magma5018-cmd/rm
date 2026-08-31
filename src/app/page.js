@@ -1121,12 +1121,6 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
   }, []);
 
   // ── 데이터 저장 ──
-  // 셀 수정 통합 핸들러 (autoEmail, managerEmail 등 인라인 수정 지원)
-  const updateCell = (id, key, value) => {
-    setRows(prev => prev.map(r => r.id === id ? { ...r, [key]: value } : r));
-    setDirtyRows(prev => new Set(prev).add(id));
-  };
-
   const saveData = async (currentRows = rows, currentInsRows = insRows, showAlert = true) => {
     try {
       const res = await fetch('/api/data', {
