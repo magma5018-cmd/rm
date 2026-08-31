@@ -106,9 +106,9 @@ export async function POST(req) {
         '</div>' +
 
         '<div style="background: #f0fdf4; padding: 16px 20px; border-radius: 10px; border: 1px solid #bbf7d0; margin-bottom: 20px;">' +
-          '<h3 style="margin: 0 0 8px 0; color: #166534; font-size: 1rem; font-weight: 800;">📸 Gemini Vision AI 사진 및 증빙 자동 업데이트 안내</h3>' +
+          '<h3 style="margin: 0 0 8px 0; color: #166534; font-size: 1rem; font-weight: 800;">📸 Gemini AI 사고 진행사항 자동 업데이트 안내</h3>' +
           '<p style="margin: 0; font-size: 0.88rem; color: #15803d; line-height: 1.6;">' +
-            '본 메일로 <strong>[전체 답장]</strong>을 보내시면서 현장 파손 사진이나 보상 서류(PDF/이미지)를 첨부하시면, <strong>Gemini Vision AI가 사진과 첨부파일을 자동으로 정밀 분석하여 사고 진행경과에 일자별로 쏙 등록</strong>해 드립니다.' +
+            '본 메일로 <strong>[전체 답장]</strong>을 보내시면서 사고 진행사항 텍스트, 또는 이메일 캡쳐본을 보내주시면 AI가 사고 진행경과를 업데이트 합니다.' +
           '</p>' +
         '</div>' +
 
