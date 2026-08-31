@@ -239,6 +239,7 @@ const causeDetailsMap = {
 };
 
 export default function Home() {
+  const [activeSmtpEngine, setActiveSmtpEngine] = useState('gmail');
   const [emailSettings, setEmailSettings] = useState({
     senderName: '',
     fromEmail: '',
@@ -4993,38 +4994,75 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
               </div>
             )}
 
-            {/* ════════ ⚙️ 이메일 발송 설정 ════════ */}
+            {/* ════════ ⚙️ 이메일 발송 설정 (2개 엔진 선택 구조) ════════ */}
             {activeMenu === 'email_settings' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                <div className="panel" style={{ padding: '28px', background: 'white', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
-                    <span style={{ fontSize: '1.5rem' }}>⚙️</span>
-                    <div>
-                      <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text)' }}>주간 자동 이메일 발송 설정</h2>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>회사 메일(ECHO / Outlook SMTP) 정보를 설정하여 미완료 사건 진행사항을 담당자에게 주간 자동 전송합니다.</p>
+                
+                {/* 1️⃣ [상단 1번 카드] Gmail 계정 전송 설정 (현재 1순위) */}
+                <div className="panel" style={{ padding: '28px', background: activeSmtpEngine === 'gmail' ? '#f0fdf4' : 'white', borderRadius: '12px', border: activeSmtpEngine === 'gmail' ? '2px solid #22c55e' : '1px solid var(--border)', transition: 'all 0.2s ease' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '1.5rem' }}>📧</span>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text)', margin: 0 }}>주간 자동 이메일 발송 설정 (Gmail 계정 전송)</h2>
+                          {activeSmtpEngine === 'gmail' && <span style={{ background: '#22c55e', color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: '12px' }}>현재 실전 작동 중 (1순위)</span>}
+                        </div>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>구글 지메일(Gmail) 서버(smtp.gmail.com:587)를 활용해 사외 차단 없이 100% 실시간 자동 전송 및 요약을 수행합니다.</p>
+                      </div>
+                    </div>
+
+                    {/* ON / OFF 토글 스위치 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 700, color: activeSmtpEngine === 'gmail' ? '#166534' : '#64748b' }}>
+                        {activeSmtpEngine === 'gmail' ? '🟢 ON (사용중)' : '⚪ OFF'}
+                      </span>
+                      <button 
+                        onClick={() => setActiveSmtpEngine('gmail')}
+                        style={{
+                          width: '56px',
+                          height: '30px',
+                          borderRadius: '15px',
+                          background: activeSmtpEngine === 'gmail' ? '#22c55e' : '#cbd5e1',
+                          border: 'none',
+                          cursor: 'pointer',
+                          position: 'relative',
+                          transition: 'background 0.3s ease',
+                          padding: '2px'
+                        }}
+                      >
+                        <div style={{
+                          width: '26px',
+                          height: '26px',
+                          borderRadius: '50%',
+                          background: 'white',
+                          position: 'absolute',
+                          top: '2px',
+                          left: activeSmtpEngine === 'gmail' ? '28px' : '2px',
+                          transition: 'left 0.3s ease',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }} />
+                      </button>
                     </div>
                   </div>
 
+                  {/* Gmail 입력 폼 */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '24px' }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>👤 사용자 이름 (Y)</label>
-                      <input type="text" value={emailSettings.senderName} onChange={e => setEmailSettings({ ...emailSettings, senderName: e.target.value })} placeholder="예: 홍길동 (보내는 사람 성명)" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>👤 발신자 성명</label>
+                      <input type="text" value={emailSettings.senderName || '마형석'} onChange={e => setEmailSettings({ ...emailSettings, senderName: e.target.value })} placeholder="예: 마형석" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>📧 전자 메일 주소 (E)</label>
-                      <input type="email" value={emailSettings.fromEmail} onChange={e => setEmailSettings({ ...emailSettings, fromEmail: e.target.value })} placeholder="본인 eMail 주소 (user@company.com)" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>👥 숨은참조 (BCC) eMail 주소</label>
-                      <input type="email" value={emailSettings.bccEmail} onChange={e => setEmailSettings({ ...emailSettings, bccEmail: e.target.value })} placeholder="bcc1@company.com, bcc2@company.com (쉼표로 구분)" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🤖 AI 답장 요약 수신용 지메일(Gmail) 주소</label>
-                      <input type="email" value={emailSettings.aiGmail} onChange={e => setEmailSettings({ ...emailSettings, aiGmail: e.target.value })} placeholder="accident.ai.report@gmail.com (수신자 자동포함용)" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>📧 보내는 지메일(Gmail) 주소</label>
+                      <input type="email" value={emailSettings.aiGmail || 'magma5018@gmail.com'} onChange={e => setEmailSettings({ ...emailSettings, aiGmail: e.target.value })} placeholder="magma5018@gmail.com" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🔑 지메일 접속 앱 비밀번호 (16자리)</label>
-                      <input type="password" value={emailSettings.gmailAppPassword || ''} onChange={e => setEmailSettings({ ...emailSettings, gmailAppPassword: e.target.value })} placeholder="구글 앱 비밀번호 16자리" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                      <input type="password" value={emailSettings.gmailAppPassword || 'gojffulntemnfqfy'} onChange={e => setEmailSettings({ ...emailSettings, gmailAppPassword: e.target.value })} placeholder="16자리 구글 앱 비밀번호" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>👥 숨은참조 (BCC) eMail 주소</label>
+                      <input type="email" value={emailSettings.bccEmail} onChange={e => setEmailSettings({ ...emailSettings, bccEmail: e.target.value })} placeholder="bcc1@company.com, bcc2@company.com" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>⏱️ AI 답장 수신 감지 주기 (자동 체크)</label>
@@ -5038,23 +5076,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       </select>
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🌐 보내는 메일 서버 (SMTP)(O)</label>
-                      <input type="text" value={emailSettings.smtpHost} onChange={e => setEmailSettings({ ...emailSettings, smtpHost: e.target.value })} placeholder="ECHO 메일 설정의 서버 주소 확인" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🔌 보내는 메일 서버 포트 (SMTP)</label>
-                      <input type="text" value={emailSettings.smtpPort} onChange={e => setEmailSettings({ ...emailSettings, smtpPort: e.target.value })} placeholder="25 또는 587" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🔑 로그온 정보 - 사용자 이름 (U)</label>
-                      <input type="text" value={emailSettings.username} onChange={e => setEmailSettings({ ...emailSettings, username: e.target.value })} placeholder="ECHO 접속 ID" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🔒 로그온 정보 - 암호 (P)</label>
-                      <input type="password" value={emailSettings.password} onChange={e => setEmailSettings({ ...emailSettings, password: e.target.value })} placeholder="ECHO 접속 암호" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>📅 자동 발송 요일 선택</label>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>📅 주간 자동 발송 요일</label>
                       <select value={emailSettings.sendDay} onChange={e => setEmailSettings({ ...emailSettings, sendDay: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', background: 'white' }}>
                         <option value="MON">매주 월요일</option>
                         <option value="TUE">매주 화요일</option>
@@ -5066,7 +5088,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       </select>
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>⏰ 자동 발송 시간 선택</label>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>⏰ 주간 자동 발송 시간</label>
                       <select value={emailSettings.sendTime} onChange={e => setEmailSettings({ ...emailSettings, sendTime: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', background: 'white' }}>
                         <option value="08:00">오전 08:00</option>
                         <option value="08:30">오전 08:30</option>
@@ -5076,57 +5098,55 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                         <option value="11:00">오전 11:00</option>
                         <option value="14:00">오후 02:00 (14:00)</option>
                         <option value="17:00">오후 05:00 (17:00)</option>
-                        <option value="18:00">오후 06:00 (18:00)</option>
                       </select>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '20px', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
                     <button 
-                      className="btn" 
+                      className="btn"
                       disabled={isTestingEmail}
-                      style={{ background: isTestingEmail ? '#cbd5e1' : '#f1f5f9', border: '1px solid var(--border)', color: 'var(--text)', padding: '10px 18px', cursor: isTestingEmail ? 'not-allowed' : 'pointer' }} 
+                      style={{ background: '#22c55e', color: 'white', border: 'none', padding: '10px 20px', fontWeight: 700 }}
                       onClick={async () => {
                         setIsTestingEmail(true);
                         const time = new Date().toLocaleTimeString('ko-KR');
                         setTestEmailLogs([
-                          `[${time}] 🔄 SMTP 서버 메일 접속 시도 중... (${emailSettings.smtpHost || '미입력'}:${emailSettings.smtpPort})`,
-                          `[${time}] 🔑 계정 인증 정보 검증 중... (${emailSettings.username || '비인증/기본'})`
+                          `[${time}] 🔄 Gmail 메일 서버(smtp.gmail.com:587) 접속 중...`,
+                          `[${time}] 🔑 지메일 계정(${emailSettings.aiGmail || 'magma5018@gmail.com'}) 앱 비밀번호 인증 중...`
                         ]);
-
                         try {
                           const res = await fetch('/api/email/test', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(emailSettings)
+                            body: JSON.stringify({
+                              ...emailSettings,
+                              smtpHost: 'smtp.gmail.com',
+                              smtpPort: '587',
+                              fromEmail: emailSettings.aiGmail || 'magma5018@gmail.com',
+                              username: emailSettings.aiGmail || 'magma5018@gmail.com',
+                              password: emailSettings.gmailAppPassword || 'gojffulntemnfqfy'
+                            })
                           });
                           const data = await res.json();
                           const t2 = new Date().toLocaleTimeString('ko-KR');
-
                           if (data.success) {
                             setTestEmailLogs(prev => [
                               ...prev,
-                              `[${t2}] ✅ SMTP 접속 및 계정 인증 성공!`,
-                              `[${t2}] 📧 수신자(${data.recipients})에게 메시지 전달 완료! (Message ID: ${data.messageId || 'OK'})`,
-                              `[${t2}] 🎉 [실제 발송 성공] 진짜 테스트 이메일이 수신함으로 정상 발송되었습니다.`
+                              `[${t2}] ✅ Gmail 접속 및 인증 100% 성공!`,
+                              `[${t2}] 🎉 [실제 발송 성공] 지메일 서버를 통해 메일이 수신함으로 전달되었습니다!`
                             ]);
                           } else {
-                            setTestEmailLogs(prev => [
-                              ...prev,
-                              `[${t2}] ❌ [발송 실패 원인] ${data.error}`
-                            ]);
+                            setTestEmailLogs(prev => [...prev, `[${t2}] ❌ [Gmail 발송 에러] ${data.error}`]);
                           }
                         } catch (err) {
                           const t2 = new Date().toLocaleTimeString('ko-KR');
-                          setTestEmailLogs(prev => [
-                            ...prev,
-                            `[${t2}] ❌ [시스템 오류] ${err.message || '네트워크 통신 에러가 발생했습니다.'}`
-                          ]);
+                          setTestEmailLogs(prev => [...prev, `[${t2}] ❌ [통신 오류] ${err.message}`]);
                         } finally {
                           setIsTestingEmail(false);
                         }
-                      }}>
-                      {isTestingEmail ? '⏳ 메일 발송 테스트 중...' : '✉️ 테스트 메일 발송'}
+                      }}
+                    >
+                      ✉️ Gmail 실제 테스트 발송
                     </button>
                     <button 
                       className="btn" 
@@ -5134,10 +5154,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       onClick={async () => {
                         setIsTestingEmail(true);
                         const time = new Date().toLocaleTimeString('ko-KR');
-                        setTestEmailLogs(prev => [
-                          ...prev,
-                          `[${time}] 📥 지메일함(${emailSettings.aiGmail}) IMAP 접속 시도 중...`
-                        ]);
+                        setTestEmailLogs(prev => [...prev, `[${time}] 📥 지메일함(${emailSettings.aiGmail}) IMAP 접속 중...`]);
                         try {
                           const res = await fetch('/api/email/fetch-replies', {
                             method: 'POST',
@@ -5149,59 +5166,174 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                           if (data.success) {
                             setTestEmailLogs(prev => [
                               ...prev,
-                              `[${t2}] ✅ 지메일함 접속 및 로그인 성공!`,
-                              `[${t2}] 📥 읽지 않은 답장 메일 ${data.processedCount}건 수신/감지 완료!`,
+                              `[${t2}] ✅ 지메일함 접속 성공!`,
+                              `[${t2}] 📥 읽지 않은 사고 답장 메일 ${data.processedCount}건 감지 완료!`,
                               ...(data.items || []).map(item => `[${t2}] 🎯 사고번호: ${item.accidentNo} | 요약: ${item.summary}`)
                             ]);
                           } else {
-                            setTestEmailLogs(prev => [
-                              ...prev,
-                              `[${t2}] ❌ [지메일 수신 실패 원인] ${data.error}`
-                            ]);
+                            setTestEmailLogs(prev => [...prev, `[${t2}] ❌ [지메일 수신 실패] ${data.error}`]);
                           }
                         } catch (err) {
                           const t2 = new Date().toLocaleTimeString('ko-KR');
-                          setTestEmailLogs(prev => [
-                            ...prev,
-                            `[${t2}] ❌ [지메일 접속 에러] ${err.message}`
-                          ]);
+                          setTestEmailLogs(prev => [...prev, `[${t2}] ❌ [지메일 접속 오류] ${err.message}`]);
                         } finally {
                           setIsTestingEmail(false);
                         }
-                      }}>
-                      📥 AI 지메일 답장 읽기 테스트
+                      }}
+                    >
+                      📥 AI 지메일 답장 수신 테스트
+                    </button>
+                  </div>
+                </div>
+
+
+                {/* 2️⃣ [하단 2번 카드] ECHO 계정 전송 설정 (사내 차단으로 현재 대기중) */}
+                <div className="panel" style={{ padding: '28px', background: activeSmtpEngine === 'echo' ? '#eff6ff' : 'white', borderRadius: '12px', border: activeSmtpEngine === 'echo' ? '2px solid #3b82f6' : '1px solid var(--border)', transition: 'all 0.2s ease', opacity: activeSmtpEngine === 'echo' ? 1 : 0.75 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '1.5rem' }}>🏢</span>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text)', margin: 0 }}>주간 자동 이메일 발송 설정 (ECHO 계정)</h2>
+                          {activeSmtpEngine === 'echo' ? (
+                            <span style={{ background: '#3b82f6', color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: '12px' }}>현재 실전 작동 중</span>
+                          ) : (
+                            <span style={{ background: '#94a3b8', color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '2px 8px', borderRadius: '12px' }}>대기 상태 (OFF)</span>
+                          )}
+                        </div>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>한솔 사내 메일 서버(echohub.hansol.com:25)를 통해 내부 담당자들에게 메일을 전송합니다. (사외 지메일 릴레이 차단 주의)</p>
+                      </div>
+                    </div>
+
+                    {/* ON / OFF 토글 스위치 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 700, color: activeSmtpEngine === 'echo' ? '#1e40af' : '#64748b' }}>
+                        {activeSmtpEngine === 'echo' ? '🔵 ON (사용중)' : '⚪ OFF'}
+                      </span>
+                      <button 
+                        onClick={() => setActiveSmtpEngine('echo')}
+                        style={{
+                          width: '56px',
+                          height: '30px',
+                          borderRadius: '15px',
+                          background: activeSmtpEngine === 'echo' ? '#3b82f6' : '#cbd5e1',
+                          border: 'none',
+                          cursor: 'pointer',
+                          position: 'relative',
+                          transition: 'background 0.3s ease',
+                          padding: '2px'
+                        }}
+                      >
+                        <div style={{
+                          width: '26px',
+                          height: '26px',
+                          borderRadius: '50%',
+                          background: 'white',
+                          position: 'absolute',
+                          top: '2px',
+                          left: activeSmtpEngine === 'echo' ? '28px' : '2px',
+                          transition: 'left 0.3s ease',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                        }} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ECHO 입력 폼 */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>👤 사용자 이름 (Y)</label>
+                      <input type="text" value={emailSettings.senderName} onChange={e => setEmailSettings({ ...emailSettings, senderName: e.target.value })} placeholder="예: 마형석" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>📧 전자 메일 주소 (E)</label>
+                      <input type="email" value={emailSettings.fromEmail} onChange={e => setEmailSettings({ ...emailSettings, fromEmail: e.target.value })} placeholder="mhs810@hansol.com" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🌐 보내는 메일 서버 (SMTP)(O)</label>
+                      <input type="text" value={emailSettings.smtpHost} onChange={e => setEmailSettings({ ...emailSettings, smtpHost: e.target.value })} placeholder="echohub.hansol.com" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🔌 보내는 메일 서버 포트 (SMTP)</label>
+                      <input type="text" value={emailSettings.smtpPort} onChange={e => setEmailSettings({ ...emailSettings, smtpPort: e.target.value })} placeholder="25" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🔑 로그온 정보 - 사용자 이름 (U)</label>
+                      <input type="text" value={emailSettings.username} onChange={e => setEmailSettings({ ...emailSettings, username: e.target.value })} placeholder="20120428" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🔒 로그온 정보 - 암호 (P)</label>
+                      <input type="password" value={emailSettings.password} onChange={e => setEmailSettings({ ...emailSettings, password: e.target.value })} placeholder="ECHO 접속 암호" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+                    <button 
+                      className="btn"
+                      disabled={isTestingEmail}
+                      style={{ background: '#f1f5f9', border: '1px solid var(--border)', color: 'var(--text)', padding: '10px 18px', fontWeight: 600 }}
+                      onClick={async () => {
+                        setIsTestingEmail(true);
+                        const time = new Date().toLocaleTimeString('ko-KR');
+                        setTestEmailLogs([
+                          `[${time}] 🔄 ECHO 사내 메일 서버(${emailSettings.smtpHost}:25) 접속 중...`
+                        ]);
+                        try {
+                          const res = await fetch('/api/email/test', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(emailSettings)
+                          });
+                          const data = await res.json();
+                          const t2 = new Date().toLocaleTimeString('ko-KR');
+                          if (data.success) {
+                            setTestEmailLogs(prev => [...prev, `[${t2}] ✅ ECHO 사내 메일 발송 성공!`]);
+                          } else {
+                            setTestEmailLogs(prev => [...prev, `[${t2}] ❌ [ECHO 발송 에러] ${data.error}`]);
+                          }
+                        } catch (err) {
+                          const t2 = new Date().toLocaleTimeString('ko-KR');
+                          setTestEmailLogs(prev => [...prev, `[${t2}] ❌ [ECHO 통신 오류] ${err.message}`]);
+                        } finally {
+                          setIsTestingEmail(false);
+                        }
+                      }}
+                    >
+                      ✉️ ECHO 사내 메일 테스트 발송
                     </button>
                     <button className="btn btn-primary" style={{ padding: '10px 24px', fontWeight: 700 }} onClick={() => alert('이메일 발송 설정이 환경 설정에 안전하게 저장되었습니다.')}>
                       💾 설정 저장하기
                     </button>
                   </div>
+                </div>
 
-                  {/* 🖥️ 실시간 테스트 발송 진행 로그 (상태창) */}
-                  <div style={{ background: '#0f172a', color: '#38bdf8', padding: '16px 20px', borderRadius: '8px', fontFamily: 'monospace', fontSize: '0.85rem', lineHeight: '1.6', minHeight: '130px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid #1e293b', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700 }}>
-                      <span>🖥️ 실시간 테스트 발송 진행 로그 (상태 모니터링)</span>
-                      {testEmailLogs.length > 0 && (
-                        <button 
-                          style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '0.75rem', cursor: 'pointer' }}
-                          onClick={() => setTestEmailLogs([])}
-                        >
-                          🧹 로그 지우기
-                        </button>
-                      )}
-                    </div>
-                    {testEmailLogs.length === 0 ? (
-                      <div style={{ color: '#475569', fontStyle: 'italic' }}>
-                        '✉️ 테스트 메일 발송' 버튼을 클릭하면 접속/인증/발송 상태 및 에러 원인이 실시간으로 여기에 출력됩니다.
-                      </div>
-                    ) : (
-                      testEmailLogs.map((log, i) => (
-                        <div key={i} style={{ color: log.includes('성공') ? '#4ade80' : log.includes('오류') || log.includes('실패') ? '#f87171' : '#38bdf8' }}>
-                          {log}
-                        </div>
-                      ))
+
+                {/* 🖥️ 실시간 테스트 발송 진행 로그 (상태 모니터링) */}
+                <div style={{ background: '#0f172a', color: '#38bdf8', padding: '16px 20px', borderRadius: '8px', fontFamily: 'monospace', fontSize: '0.85rem', lineHeight: '1.6', minHeight: '130px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid #1e293b', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700 }}>
+                    <span>🖥️ 실시간 테스트 발송 진행 로그 (상태 모니터링)</span>
+                    {testEmailLogs.length > 0 && (
+                      <button 
+                        style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '0.75rem', cursor: 'pointer' }}
+                        onClick={() => setTestEmailLogs([])}
+                      >
+                        🧹 로그 지우기
+                      </button>
                     )}
                   </div>
+                  {testEmailLogs.length === 0 ? (
+                    <div style={{ color: '#475569', fontStyle: 'italic' }}>
+                      원하시는 테스트 버튼을 클릭하면 접속/인증/발송 상태 및 결과가 실시간으로 출력됩니다.
+                    </div>
+                  ) : (
+                    testEmailLogs.map((log, i) => (
+                      <div key={i} style={{ color: log.includes('성공') ? '#4ade80' : log.includes('에러') || log.includes('실패') || log.includes('오류') ? '#f87171' : '#38bdf8' }}>
+                        {log}
+                      </div>
+                    ))
+                  )}
                 </div>
+
               </div>
             )}
 
