@@ -1303,7 +1303,8 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
       const newAccidentNo = `${todayPrefix}-${nextSeq}`;
 
       const newRow = { ...emptyRow(), 사고번호: newAccidentNo };
-      return [...prev, newRow];
+      setDirtyRows(d => new Set([...d, newRow.id]));
+      return [newRow, ...prev];
     });
   };
 
