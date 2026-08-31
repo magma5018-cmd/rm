@@ -785,7 +785,7 @@ export default function Home() {
   };
 
   // UI 상태
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -3334,30 +3334,60 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
       )}
 
       {/* ─── SIDEBAR ─── */}
-      <aside className="sidebar" style={{ width: isSidebarOpen ? 'var(--sidebar-width)' : '0' }}>
-        <div className="sidebar-brand">🗂 전사 사고 및 보험관리</div>
+      {/* ─── 튀어나오는 사이드바 핸들 버튼 (닫혀있을 때 노출) ─── */}
+      {!isSidebarOpen && (
+        <div 
+          className="sidebar-handle-btn"
+          onClick={() => setIsSidebarOpen(true)}
+          title="클릭하여 메뉴 열기"
+        >
+          <span style={{ fontSize: '1rem', color: '#60a5fa' }}>▶</span>
+          <span>메뉴</span>
+        </div>
+      )}
 
-        <button className="sidebar-action-btn" style={{ marginTop: '16px' }} onClick={() => setAiModalOpen(true)}>
+      {/* ─── 사이드바 배경 어둡게 처리 (열렸을 때) ─── */}
+      {isSidebarOpen && (
+        <div 
+          className="sidebar-overlay-backdrop" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* ─── SIDEBAR OVERLAY ─── */}
+      <aside className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
+        <div className="sidebar-brand" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span>🗂 전사 사고 및 보험관리</span>
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            title="메뉴 닫기"
+          >
+            ◀
+          </button>
+        </div>
+
+        <button className="sidebar-action-btn" style={{ marginTop: '16px' }} onClick={() => { setAiModalOpen(true); setIsSidebarOpen(false); }}>
           + 신규 사고 접수 (AI)
         </button>
 
         <div className="sidebar-nav">
           <div className="nav-section-label">사고관리</div>
-          <div className={`nav-item ${activeMenu === 'list' ? 'active' : ''}`} onClick={() => setActiveMenu('list')}>
+          <div className={`nav-item ${activeMenu === 'list' ? 'active' : ''}`} onClick={() => { setActiveMenu('list'); setIsSidebarOpen(false); }}>
             📋 전사 사고 및 클레임 현황
           </div>
-          <div className={`nav-item ${activeMenu === 'analytics' ? 'active' : ''}`} onClick={() => setActiveMenu('analytics')}>
+          <div className={`nav-item ${activeMenu === 'analytics' ? 'active' : ''}`} onClick={() => { setActiveMenu('analytics'); setIsSidebarOpen(false); }}>
             📈 사고현황 분석 대시보드
           </div>
-          <div className={`nav-item ${activeMenu === 'weekly' ? 'active' : ''}`} onClick={() => setActiveMenu('weekly')}>
+          <div className={`nav-item ${activeMenu === 'weekly' ? 'active' : ''}`} onClick={() => { setActiveMenu('weekly'); setIsSidebarOpen(false); }}>
             📊 주간 사고보험 리포트
           </div>
-          <div className={`nav-item ${activeMenu === 'weekly_report' ? 'active' : ''}`} onClick={() => setActiveMenu('weekly_report')}>
+          <div className={`nav-item ${activeMenu === 'weekly_report' ? 'active' : ''}`} onClick={() => { setActiveMenu('weekly_report'); setIsSidebarOpen(false); }}>
             📋 주간업무
           </div>
           <div className="nav-divider" />
           <div className="nav-section-label">사고가이드</div>
-          <div className="nav-item" onClick={() => window.open('https://gemini.google.com/gem/1ATRQWnWjfGWA15d4_26QbDaIFdAlpERF?usp=sharing', '_blank')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="nav-item" onClick={() => { window.open('https://gemini.google.com/gem/1ATRQWnWjfGWA15d4_26QbDaIFdAlpERF?usp=sharing', '_blank'); setIsSidebarOpen(false); }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>📖 사고보험처리 가이드(AI)</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }} title="새 창으로 열기">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -3366,10 +3396,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
           </div>
           <div className="nav-divider" />
           <div className="nav-section-label">보험관리</div>
-          <div className={`nav-item ${activeMenu === 'insurance' ? 'active' : ''}`} onClick={() => setActiveMenu('insurance')}>
+          <div className={`nav-item ${activeMenu === 'insurance' ? 'active' : ''}`} onClick={() => { setActiveMenu('insurance'); setIsSidebarOpen(false); }}>
             🛡️ 전사 보험가입 현황
           </div>
-          <div className="nav-item" onClick={() => window.open('https://gemini.google.com/gem/12mY0bU-q2VLzL4zI2Fhs4AxGMb1f2NTc?usp=sharing', '_blank')} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="nav-item" onClick={() => { window.open('https://gemini.google.com/gem/12mY0bU-q2VLzL4zI2Fhs4AxGMb1f2NTc?usp=sharing', '_blank'); setIsSidebarOpen(false); }} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>🤖 보험약관 챗봇(AI)</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5 }} title="새 창으로 열기">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -3378,7 +3408,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
           </div>
           <div className="nav-divider" />
           <div className="nav-section-label">설정</div>
-          <div className={`nav-item ${activeMenu === 'email_settings' ? 'active' : ''}`} onClick={() => setActiveMenu('email_settings')}>
+          <div className={`nav-item ${activeMenu === 'email_settings' ? 'active' : ''}`} onClick={() => { setActiveMenu('email_settings'); setIsSidebarOpen(false); }}>
             ⚙️ 이메일 발송 설정
           </div>
         </div>

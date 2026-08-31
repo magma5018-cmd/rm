@@ -39,90 +39,84 @@ input, textarea, select, button {
   font-family: inherit;
 }
 
-/* === SIDEBAR === */
+/* === SIDEBAR OVERLAY & HANDLE === */
 .sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: var(--primary);
   display: flex;
   flex-direction: column;
+  z-index: 1000;
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar.closed {
+  transform: translateX(-100%);
+}
+
+.sidebar.open {
+  transform: translateX(0);
+}
+
+/* 튀어나오는 열기 핸들 버튼 */
+.sidebar-handle-btn {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  z-index: 999;
   background: var(--primary);
-  height: 100vh;
-  transition: width 0.3s ease;
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.sidebar-brand {
-  padding: 24px 20px 28px;
-  font-size: 1.1rem;
-  font-weight: 700;
   color: white;
-  letter-spacing: -0.3px;
-  white-space: nowrap;
-  border-bottom: 1px solid rgba(255,255,255,0.12);
-}
-
-.sidebar-nav { padding: 16px 12px; flex: 1; }
-
-.nav-item {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-left: none;
+  border-radius: 0 16px 16px 0;
+  padding: 16px 10px 16px 8px;
+  cursor: pointer;
+  box-shadow: 4px 0 16px rgba(37, 99, 235, 0.4);
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 11px 14px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: rgba(255,255,255,0.75);
-  white-space: nowrap;
-  transition: background 0.15s, color 0.15s;
-  margin-bottom: 4px;
+  gap: 6px;
+  transition: all 0.25s ease-in-out;
+  user-select: none;
 }
 
-.nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
-.nav-item.active { background: rgba(255,255,255,0.18); color: white; font-weight: 600; }
-
-.nav-divider {
-  height: 1px;
-  background: rgba(255,255,255,0.1);
-  margin: 12px 0;
+.sidebar-handle-btn:hover {
+  background: var(--primary-dark);
+  padding-left: 12px;
+  box-shadow: 6px 0 20px rgba(37, 99, 235, 0.6);
 }
 
-.nav-section-label {
-  padding: 4px 14px 8px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(255,255,255,0.4);
-  white-space: nowrap;
+.sidebar-handle-btn span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  writing-mode: vertical-rl;
+  letter-spacing: 2px;
 }
 
-.sidebar-action-btn {
-  margin: 8px 12px 0;
-  background: white;
-  color: var(--primary);
-  border: none;
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.2s;
-  width: calc(100% - 24px);
-  text-align: center;
+/* 사이드바 배경 오버레이 딤 처리 */
+.sidebar-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(2px);
+  z-index: 998;
+  animation: fadeIn 0.2s ease;
 }
 
-.sidebar-action-btn:hover { opacity: 0.9; }
-
-.sidebar-footer {
-  padding: 16px 20px;
-  font-size: 0.78rem;
-  color: rgba(255,255,255,0.55);
-  border-top: 1px solid rgba(255,255,255,0.1);
-  white-space: nowrap;
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+  width: 100vw;
 }
 
-/* === MAIN CONTENT === */
 .app-container { display: flex; width: 100vw; height: 100vh; }
 
 .main-content {
