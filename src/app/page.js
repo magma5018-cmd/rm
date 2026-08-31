@@ -1117,7 +1117,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
         setIsLoading(false);
       }
     };
-    setTimeout(() => window.location.reload(), 1500);
+    
   }, []);
 
   // ── 데이터 저장 ──
