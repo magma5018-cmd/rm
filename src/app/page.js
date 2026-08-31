@@ -249,7 +249,8 @@ export default function Home() {
     username: '',
     password: '',
     sendDay: 'MON',
-    sendTime: '09:00'
+    sendTime: '09:00',
+    checkInterval: '5'
   });
   const [testEmailLogs, setTestEmailLogs] = useState([]);
   const [isTestingEmail, setIsTestingEmail] = useState(false);
@@ -5019,6 +5020,17 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     <div>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🤖 AI 답장 요약 수신용 지메일(Gmail) 주소</label>
                       <input type="email" value={emailSettings.aiGmail} onChange={e => setEmailSettings({ ...emailSettings, aiGmail: e.target.value })} placeholder="accident.ai.report@gmail.com (수신자 자동포함용)" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>⏱️ AI 답장 수신 감지 주기 (자동 체크)</label>
+                      <select value={emailSettings.checkInterval || '5'} onChange={e => setEmailSettings({ ...emailSettings, checkInterval: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', background: 'white' }}>
+                        <option value="1">매 1분 마다 (실시간 수준 감지)</option>
+                        <option value="5">매 5분 마다 (권장)</option>
+                        <option value="10">매 10분 마다</option>
+                        <option value="15">매 15분 마다</option>
+                        <option value="30">매 30분 마다</option>
+                        <option value="60">매 1시간 마다</option>
+                      </select>
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🌐 보내는 메일 서버 (SMTP)(O)</label>
