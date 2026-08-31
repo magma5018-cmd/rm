@@ -38,17 +38,20 @@ export async function GET() {
       }
       usedAccIds.add(id);
 
+      const rawAuto = getAccVal(row, '자동발송(Y/N)');
+      const rawMgrEmail = getAccVal(row, '담당자 이메일');
+
       return {
         id,
-        사고번호: getAccVal(row, '사고번호'),
-        autoEmail: getAccVal(row, '자동발송(Y/N)') || 'Y',
-        managerEmail: getAccVal(row, '담당자 이메일'),
-        사고일: getAccVal(row, '사고일'),
-        사고접수일: getAccVal(row, '사고접수일'),
-        가이드제공일: getAccVal(row, '가이드제공일'),
-        사업부: getAccVal(row, '사업부'),
-        부서: getAccVal(row, '부서'),
-        담당자: getAccVal(row, '담당자'),
+        사고번호: getAccVal(row, '사고번호') || row[1] || '',
+        autoEmail: (rawAuto === 'Y' || rawAuto === 'N') ? rawAuto : (row[55] || 'Y'),
+        managerEmail: rawMgrEmail || row[56] || '',
+        사고일: getAccVal(row, '사고일') || row[2] || '',
+        사고접수일: getAccVal(row, '사고접수일') || row[3] || '',
+        가이드제공일: getAccVal(row, '가이드제공일') || row[4] || '',
+        사업부: getAccVal(row, '사업부') || row[5] || '',
+        부서: getAccVal(row, '부서') || row[6] || '',
+        담당자: getAccVal(row, '담당자') || row[7] || '',
         실화주: getAccVal(row, '실화주'),
         고객사: getAccVal(row, '고객사'),
         귀책사: getAccVal(row, '귀책사'),
@@ -56,18 +59,15 @@ export async function GET() {
         사고내용: getAccVal(row, '사고내용'),
         진행경과: (() => {
           let raw = getAccVal(row, '진행경과');
-          // 구버전 fallback
           if (!raw && row[29] && row[29].startsWith('[')) {
             raw = row[29];
           }
           if (!raw || !raw.trim()) return [];
 
-          // 1) JSON 배열이면 그대로 파싱
           if (raw.trim().startsWith('[')) {
             try { return JSON.parse(raw); } catch(e) {}
           }
 
-          // 2) 일반 텍스트 → 줄 단위로 분리해 항목화
           return raw.split(/\n+/).map(l => l.trim()).filter(Boolean).map(line => {
             const m = line.match(/^(\d{4}-\d{2}-\d{2})[:\s]+(.+)/);
             if (m) return { date: m[1], text: m[2].trim() };
@@ -141,7 +141,6 @@ export async function GET() {
 
     const rows = rowsRaw.map(r => {
       if (!r.사고번호 || r.사고번호.trim() === '') {
-        // 사고접수일이 있으면 사고접수일 기반, 없으면 사고일 기반, 없으면 오늘 날짜
         const dateStr = r.사고접수일 ? r.사고접수일 : (r.사고일 ? r.사고일 : new Date().toISOString().split('T')[0]);
         const prefix = dateStr.replace(/-/g, '');
         const nextSeq = (seqMap[prefix] || 0) + 1;
@@ -154,33 +153,17 @@ export async function GET() {
     const usedInsIds = new Set();
     const insRows = insuranceData.map((row, i) => {
       let id = parseInt(row[0]);
-      // 보험 ID도 동일하게 유니크 보장
       if (isNaN(id) || usedInsIds.has(id)) {
         id = 20000 + i;
         while (usedInsIds.has(id)) { id++; }
       }
       usedInsIds.add(id);
-      // 구글 시트 데이터 구조 변경 감지 로직 개선
-      // 새로운 구조: ID(0), 구분(1), 보험명(2), 드라이브URL(3), 성격(4) ...
-      // 이전 구조: ID(0), 구분(1), 보험명(2), 성격(3), 보상내용(4) ... 드라이브URL(15)
-      
-      const valAt3 = String(row[3] || '').trim();
-      const valAt15 = String(row[15] || '').trim();
-      
-      const isUrl = (val) => val.startsWith('http') || val.includes('drive.google.com');
-      
+
       let isNewIns = false;
-      if (isUrl(valAt3)) {
-        isNewIns = true;
-      } else if (isUrl(valAt15)) {
-        isNewIns = false;
-      } else {
-        // 둘 다 URL이 아닌 경우 (비어있거나 잘못된 데이터)
-        // 만약 컬럼 3이 비어있지 않고 URL도 아니면 높은 확률로 '성격' 데이터임 (구구조)
-        if (valAt3 !== '' && !isUrl(valAt3)) {
-          isNewIns = false;
+      if (row.length > 3) {
+        if (row[3] && (row[3].startsWith('http://') || row[3].startsWith('https://'))) {
+          isNewIns = true;
         } else {
-          // 컬럼 3이 비어있으면 신규 구조로 가정 (사용자가 전체 저장을 눌렀을 가능성이 높음)
           isNewIns = true;
         }
       }
@@ -217,7 +200,7 @@ export async function POST(request) {
   try {
     const { rows, insRows } = await request.json();
 
-    // 시트 헤더 정의 (UI 순서와 동일하게)
+    // 시트 헤더 정의 (BD열: 자동발송(Y/N), BE열: 담당자 이메일 포함 총 57개)
     const accidentHeaders = [
       'ID', '사고번호', '사고일', '사고접수일', '가이드제공일', '사업부', '부서', '담당자',
       '실화주', '고객사', '귀책사', '사고명', '사고내용', '진행경과', '대표이사 보고사항', '대표이사 보고일',
@@ -244,7 +227,9 @@ export async function POST(request) {
       '사고 심각도',
       '사고 발생가능성',
       '사고 위험등급',
-      '인명 피해 상세 내용'
+      '인명 피해 상세 내용',
+      '자동발송(Y/N)',
+      '담당자 이메일'
     ];
 
     const insuranceHeaders = [
@@ -253,7 +238,7 @@ export async function POST(request) {
       '보험 시작일', '보험 종료일', '비고', '상태'
     ];
 
-    // 사고 데이터 변환 (헤더 순서와 일치시킴)
+    // 사고 데이터 변환 (BD열/BE열 포함 총 57개 컬럼 1:1 대응)
     const accidentValues = rows.map(r => [
       r.id, r.사고번호, r.사고일, r['사고접수일'] || '', r['가이드제공일'] || '', r.사업부, r.부서, r.담당자,
       r.실화주, r.고객사, r.귀책사, r.사고명, r.사고내용, JSON.stringify(r.진행경과 || []),
@@ -281,7 +266,9 @@ export async function POST(request) {
       r['사고 심각도'] || '',
       r['사고 발생가능성'] || '',
       r['사고 위험등급'] || '',
-      r['인명 피해 상세 내용'] || ''
+      r['인명 피해 상세 내용'] || '',
+      r.autoEmail || 'Y',
+      r.managerEmail || ''
     ]);
 
     // 보험 데이터 변환
@@ -291,8 +278,8 @@ export async function POST(request) {
       r['보험 시작일'], r['보험 종료일'], r.비고, r.상태 || '계약 유지중',
     ]);
 
-    // 시트 초기화 (기존 데이터가 남아있는 현상 방지)
-    const accMaxCol = googleColumnName(accidentHeaders.length);
+    // 시트 초기화 (A2:BE1000)
+    const accMaxCol = googleColumnName(accidentHeaders.length); // BE열
     await sheets.spreadsheets.values.clear({
       spreadsheetId: sheetId,
       range: `${ACCIDENT_SHEET}!A2:${accMaxCol}1000`,
@@ -302,7 +289,7 @@ export async function POST(request) {
       range: `${INSURANCE_SHEET}!A2:Q1000`,
     });
 
-    // 시트 업데이트 (기존 내용 덮어쓰기)
+    // 시트 업데이트 (기존 내용 덮어쓰기 & A1:BE1 헤더 및 A2:BE1000 데이터 강제 작성)
     await sheets.spreadsheets.values.batchUpdate({
       spreadsheetId: sheetId,
       requestBody: {
