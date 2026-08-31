@@ -3770,7 +3770,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                 </div>
               </div>
 
-              {/* 통계 카드 (상단 점선 위치 위로 상향 밀착 & 내부 여백 완벽 균등 정렬) */}
+              {/* 통계 카드 (배상액 개념 보충 및 💡 3줄 설명 100% 수평 균형) */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '16px' }}>
                 
                 {/* 1️⃣ 전체사고현황 */}
@@ -3801,9 +3801,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>발생액 합계</span>
                       <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)' }}>₩ {dashboardStats.totalOccur.toLocaleString()}</span>
                     </div>
-                    <div style={{ fontSize: '0.64rem', color: '#475569', lineHeight: 1.35, background: '#f8fafc', padding: '5px 7px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
-                      💡 <strong>전체 접수건</strong> : 발생 사고 총 건수 및 발생액<br />
-                      💡 (미완료 + 종결 사건 전체 포함)
+                    <div style={{ fontSize: '0.62rem', color: '#475569', lineHeight: 1.35, background: '#f8fafc', padding: '5px 7px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                      💡 <strong>전체 접수건</strong> = 발생 사고 총 건수 및 금액<br />
+                      💡 (진행중 사건 + 종결 사건 전체 포함)<br />
+                      💡 <strong>발생액</strong> = 최초 접수된 예상 사고 금액
                     </div>
                   </div>
                 </div>
@@ -3836,14 +3837,15 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>사고액 합계</span>
                       <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#10b981' }}>₩ {dashboardStats.totalNoClaimOccur.toLocaleString()}</span>
                     </div>
-                    <div style={{ fontSize: '0.64rem', color: '#166534', lineHeight: 1.35, background: '#f0fdf4', padding: '5px 7px', borderRadius: '4px', border: '1px solid #bbf7d0' }}>
-                      💡 <strong>면책/무이의</strong> : 손실 비용 없이 종결 완료 건<br />
-                      💡 (회사 순 손실 0원 정산)
+                    <div style={{ fontSize: '0.62rem', color: '#166534', lineHeight: 1.35, background: '#f0fdf4', padding: '5px 7px', borderRadius: '4px', border: '1px solid #bbf7d0' }}>
+                      💡 <strong>면책/무이의</strong> = 비용 청구 없이 완결된 건<br />
+                      💡 (회사 순 손실 0원 정산 종결)<br />
+                      💡 <strong>사고액</strong> = 면책 처리된 최초 사고 금액
                     </div>
                   </div>
                 </div>
 
-                {/* 3️⃣ 종결 (클레임처리) */}
+                {/* 3️⃣ 종결 (클레임처리) - 배상액 개념 보충! */}
                 <div 
                   className="panel" 
                   onClick={() => toggleDrill('card', 'loss')}
@@ -3877,9 +3879,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>회사 순 손실</span>
                       <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ef4444' }}>₩ {dashboardStats.totalLoss.toLocaleString()}</span>
                     </div>
-                    <div style={{ fontSize: '0.64rem', color: '#991b1b', lineHeight: 1.35, background: '#fff5f5', padding: '5px 7px', borderRadius: '4px', border: '1px solid #fecdd3' }}>
+                    <div style={{ fontSize: '0.62rem', color: '#991b1b', lineHeight: 1.35, background: '#fff5f5', padding: '5px 7px', borderRadius: '4px', border: '1px solid #fecdd3' }}>
+                      💡 <strong>배상액</strong> = 고객/상대방에게 지급한 배상금<br />
                       💡 <strong>회수액</strong> = 구상금 + 보험 보상 수령액<br />
-                      💡 <strong>순 손실</strong> = 배상액 - 회수액 (최종 부담액)
+                      💡 <strong>순 손실</strong> = 배상액 - 회수액 (회사 부담액)
                     </div>
                   </div>
                 </div>
@@ -3912,9 +3915,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>대상액 합계</span>
                       <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#f59e0b' }}>₩ {(dashboardStats.totalOccur - dashboardStats.totalNoClaimOccur).toLocaleString()}</span>
                     </div>
-                    <div style={{ fontSize: '0.64rem', color: '#92400e', lineHeight: 1.35, background: '#fffbeb', padding: '5px 7px', borderRadius: '4px', border: '1px solid #fef3c7' }}>
-                      💡 <strong>진행중 사건</strong> : 보상/구상 진행 중 사건<br />
-                      💡 (손실 금액 미확정 상태)
+                    <div style={{ fontSize: '0.62rem', color: '#92400e', lineHeight: 1.35, background: '#fffbeb', padding: '5px 7px', borderRadius: '4px', border: '1px solid #fef3c7' }}>
+                      💡 <strong>진행중 사건</strong> = 보상/구상 진행 중인 사건<br />
+                      💡 (최종 손실 금액 미확정 상태)<br />
+                      💡 <strong>대상액</strong> = 현재 수수/조정 중인 대상 금액
                     </div>
                   </div>
                 </div>
