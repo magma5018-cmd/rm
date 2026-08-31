@@ -26,7 +26,7 @@ export async function POST(req) {
     const senderEmail = fromEmail || aiGmail || 'magma5018@gmail.com';
     const authPass = password || 'gojffulntemnfqfy';
 
-    // 1. 발송 대상 사고 건 선별
+    // 1. 발송 조건 엄격 필터링: autoEmail === 'Y' 이면서 managerEmail 주소가 올바른 건
     const targetRows = Array.isArray(rows) 
       ? rows.filter(r => r && (r.autoEmail === 'Y' || r.autoEmail === 'y') && r.managerEmail && typeof r.managerEmail === 'string' && r.managerEmail.trim().includes('@')) 
       : [];
@@ -39,8 +39,6 @@ export async function POST(req) {
     }
 
     const portNum = parseInt(smtpPort, 10) || 587;
-
-    // 타임아웃 8초 제한 탑재 (멈춤 현상 원천 차단)
     const transporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 587,
@@ -64,11 +62,46 @@ export async function POST(req) {
       const accContent = row.사고내용 || '내용 없음';
       const managerEmail = row.managerEmail.trim();
 
+      // 📌 진행경과 히스토리 파싱 (배열 또는 JSON 스트링 또는 텍스트)
+      let progressList = [];
+      if (Array.isArray(row.진행경과)) {
+        progressList = row.진행경과;
+      } else if (typeof row.진행경과 === 'string' && row.진행경과.trim() !== '') {
+        try {
+          const parsed = JSON.parse(row.진행경과);
+          if (Array.isArray(parsed)) progressList = parsed;
+        } catch (e) {
+          progressList = row.진행경과.split(/\n+/).map(l => ({ date: '', text: l.trim() }));
+        }
+      }
+
+      // 진행경과 HTML 표 조립
+      let progressHtml = '';
+      if (progressList.length > 0) {
+        progressHtml = '<div style="margin-bottom: 20px;">' +
+          '<h3 style="font-size: 0.95rem; font-weight: 800; color: #1e3a8a; margin: 0 0 8px 0;">📋 진행경과 (상세 이력 총 ' + progressList.length + '건)</h3>' +
+          '<div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 16px;">';
+        
+        progressList.forEach((p, idx) => {
+          const pDate = p.date ? '[' + p.date + '] ' : '';
+          progressHtml += '<div style="font-size: 0.88rem; padding: 6px 0; border-bottom: ' + (idx === progressList.length - 1 ? 'none' : '1px dashed #e2e8f0') + '; color: #334155;">' +
+            '<strong style="color: #2563eb;">' + pDate + '</strong>' + (p.text || '') +
+          '</div>';
+        });
+
+        progressHtml += '</div></div>';
+      }
+
       const recipient = managerEmail;
+
+      // 📌 요구사항 2: 메일제목 및 상단 헤더 바에서 [사고명]을 앞으로 끌어오고 사고번호를 뒤로 배치!
+      // 제목 예시: [사고 리포트] 컨테이너 바나나 미끄러짐 사고 (사고번호: 20260831-1)
+      const subjectTitle = '[사고 리포트] ' + accTitle + ' (사고번호: ' + accNo + ')';
+      const headerTitle = '🚨 [사고 관리 리포트] ' + accTitle + ' (사고번호: ' + accNo + ')';
 
       const mailHtml = '<div style="font-family: sans-serif; padding: 24px; border: 1px solid #cbd5e1; border-radius: 12px; max-width: 700px; background: #ffffff; margin: 0 auto;">' +
         '<div style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; padding: 20px 24px; border-radius: 10px; margin-bottom: 20px;">' +
-          '<h2 style="margin:0; font-size: 1.3rem; font-weight: 800;">🚨 [사고 관리 리포트] ' + accNo + '</h2>' +
+          '<h2 style="margin:0; font-size: 1.25rem; font-weight: 800;">' + headerTitle + '</h2>' +
           '<p style="margin: 6px 0 0 0; font-size: 0.88rem; opacity: 0.95;">담당자 전용 사고 진행 및 AI 답장 자동 업데이트 리포트입니다.</p>' +
         '</div>' +
 
@@ -80,6 +113,10 @@ export async function POST(req) {
         '</div>' +
 
         '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.9rem;">' +
+          '<tr>' +
+            '<td style="padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; font-weight: bold; width: 22%;">사고명</td>' +
+            '<td colspan="3" style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: bold; color: #0f172a;">' + accTitle + '</td>' +
+          '</tr>' +
           '<tr>' +
             '<td style="padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; font-weight: bold; width: 22%;">사고번호</td>' +
             '<td style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: bold; color: #2563eb;">' + accNo + '</td>' +
@@ -93,14 +130,12 @@ export async function POST(req) {
             '<td style="padding: 10px 14px; border: 1px solid #e2e8f0;">' + accManager + ' (' + managerEmail + ')</td>' +
           '</tr>' +
           '<tr>' +
-            '<td style="padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; font-weight: bold;">사고명</td>' +
-            '<td colspan="3" style="padding: 10px 14px; border: 1px solid #e2e8f0; font-weight: bold; color: #0f172a;">' + accTitle + '</td>' +
-          '</tr>' +
-          '<tr>' +
             '<td style="padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; font-weight: bold;">사고 내용</td>' +
             '<td colspan="3" style="padding: 10px 14px; border: 1px solid #e2e8f0; line-height: 1.6;">' + accContent + '</td>' +
           '</tr>' +
         '</table>' +
+
+        progressHtml +
 
         '<div style="background: #f8fafc; padding: 14px 18px; border-radius: 8px; font-size: 0.82rem; color: #64748b; border: 1px solid #e2e8f0; text-align: center;">' +
           '본 이메일은 사고 관리 시스템에서 담당자 1:1 맞춤으로 자동 발송된 리포트입니다.' +
@@ -111,7 +146,7 @@ export async function POST(req) {
         from: '"' + senderName + '" <' + senderEmail + '>',
         to: recipient,
         replyTo: aiGmail || senderEmail,
-        subject: '[사고 리포트] ' + accNo + ' - ' + accTitle,
+        subject: subjectTitle,
         html: mailHtml
       };
 
