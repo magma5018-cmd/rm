@@ -243,7 +243,8 @@ export default function Home() {
     senderName: '',
     fromEmail: '',
     bccEmail: '',
-    aiGmail: '',
+    aiGmail: 'magma5018@gmail.com',
+    gmailAppPassword: 'gojffulntemnfqfy',
     smtpHost: '',
     smtpPort: '25',
     username: '',
@@ -5022,6 +5023,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       <input type="email" value={emailSettings.aiGmail} onChange={e => setEmailSettings({ ...emailSettings, aiGmail: e.target.value })} placeholder="accident.ai.report@gmail.com (수신자 자동포함용)" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
                     </div>
                     <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🔑 지메일 접속 앱 비밀번호 (16자리)</label>
+                      <input type="password" value={emailSettings.gmailAppPassword || ''} onChange={e => setEmailSettings({ ...emailSettings, gmailAppPassword: e.target.value })} placeholder="구글 앱 비밀번호 16자리" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>⏱️ AI 답장 수신 감지 주기 (자동 체크)</label>
                       <select value={emailSettings.checkInterval || '5'} onChange={e => setEmailSettings({ ...emailSettings, checkInterval: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', background: 'white' }}>
                         <option value="1">매 1분 마다 (실시간 수준 감지)</option>
@@ -5122,6 +5127,49 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                         }
                       }}>
                       {isTestingEmail ? '⏳ 메일 발송 테스트 중...' : '✉️ 테스트 메일 발송'}
+                    </button>
+                    <button 
+                      className="btn" 
+                      style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '10px 18px', fontWeight: 600 }}
+                      onClick={async () => {
+                        setIsTestingEmail(true);
+                        const time = new Date().toLocaleTimeString('ko-KR');
+                        setTestEmailLogs(prev => [
+                          ...prev,
+                          `[${time}] 📥 지메일함(${emailSettings.aiGmail}) IMAP 접속 시도 중...`
+                        ]);
+                        try {
+                          const res = await fetch('/api/email/fetch-replies', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(emailSettings)
+                          });
+                          const data = await res.json();
+                          const t2 = new Date().toLocaleTimeString('ko-KR');
+                          if (data.success) {
+                            setTestEmailLogs(prev => [
+                              ...prev,
+                              `[${t2}] ✅ 지메일함 접속 및 로그인 성공!`,
+                              `[${t2}] 📥 읽지 않은 답장 메일 ${data.processedCount}건 수신/감지 완료!`,
+                              ...(data.items || []).map(item => `[${t2}] 🎯 사고번호: ${item.accidentNo} | 요약: ${item.summary}`)
+                            ]);
+                          } else {
+                            setTestEmailLogs(prev => [
+                              ...prev,
+                              `[${t2}] ❌ [지메일 수신 실패 원인] ${data.error}`
+                            ]);
+                          }
+                        } catch (err) {
+                          const t2 = new Date().toLocaleTimeString('ko-KR');
+                          setTestEmailLogs(prev => [
+                            ...prev,
+                            `[${t2}] ❌ [지메일 접속 에러] ${err.message}`
+                          ]);
+                        } finally {
+                          setIsTestingEmail(false);
+                        }
+                      }}>
+                      📥 AI 지메일 답장 읽기 테스트
                     </button>
                     <button className="btn btn-primary" style={{ padding: '10px 24px', fontWeight: 700 }} onClick={() => alert('이메일 발송 설정이 환경 설정에 안전하게 저장되었습니다.')}>
                       💾 설정 저장하기
