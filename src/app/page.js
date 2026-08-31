@@ -1727,6 +1727,8 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
 
     let totalNoClaimOccur = 0;
     let totalNoClaimCount = 0;
+    let totalCompCount = 0;
+    let inProgressCount = 0;
 
     targetRows.forEach(r => {
       const reportStatus = r.완료보고 || '';
@@ -1743,9 +1745,15 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
       totalRecov += recov;
       totalLoss += loss;
 
-      if (isNoClaim) {
-        totalNoClaimOccur += occur;
-        totalNoClaimCount += 1;
+      if (isCompleted) {
+        if (isNoClaim) {
+          totalNoClaimOccur += occur;
+          totalNoClaimCount += 1;
+        } else {
+          totalCompCount += 1;
+        }
+      } else {
+        inProgressCount += 1;
       }
 
       const dept = r.부서 || r.사업부 || '소속 미상';
