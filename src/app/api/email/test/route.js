@@ -26,7 +26,13 @@ export async function POST(req) {
     const senderEmail = fromEmail || aiGmail || 'magma5018@gmail.com';
     const authPass = password || 'gojffulntemnfqfy';
 
-    // 1. 발송 조건 엄격 필터링: autoEmail === 'Y' 이면서 managerEmail 주소가 올바른 건
+    // 📌 수신인(To) 이메일 태그 목록 전체 추출 (mhs810@hansol.com, magma5018@gmail.com 등)
+    let globalRecipients = [];
+    if (Array.isArray(toEmails) && toEmails.length > 0) {
+      globalRecipients = toEmails.map(s => typeof s === 'string' ? s.trim() : (s.email || '')).filter(s => s && s.includes('@'));
+    }
+
+    // 1. 발송 대상 사고 건 선별
     const targetRows = Array.isArray(rows) 
       ? rows.filter(r => r && (r.autoEmail === 'Y' || r.autoEmail === 'y') && r.managerEmail && typeof r.managerEmail === 'string' && r.managerEmail.trim().includes('@')) 
       : [];
@@ -62,7 +68,14 @@ export async function POST(req) {
       const accContent = row.사고내용 || '내용 없음';
       const managerEmail = row.managerEmail.trim();
 
-      // 📌 진행경과 히스토리 파싱 (배열 또는 JSON 스트링 또는 텍스트)
+      // 📌 100% 명확한 해결: 사고 담당자 이메일 + 설정 화면에 등록된 수신인 태그(mhs810@hansol.com 포함) 전체를 100% 통합 수신자로 묶기!
+      const recipientsSet = new Set(globalRecipients);
+      recipientsSet.add(managerEmail);
+
+      const finalRecipientsList = Array.from(recipientsSet).filter(Boolean);
+      const finalRecipientsStr = finalRecipientsList.join(', ');
+
+      // 📌 진행경과 히스토리 파싱
       let progressList = [];
       if (Array.isArray(row.진행경과)) {
         progressList = row.진행경과;
@@ -75,7 +88,6 @@ export async function POST(req) {
         }
       }
 
-      // 진행경과 HTML 표 조립
       let progressHtml = '';
       if (progressList.length > 0) {
         progressHtml = '<div style="margin-bottom: 20px;">' +
@@ -92,10 +104,6 @@ export async function POST(req) {
         progressHtml += '</div></div>';
       }
 
-      const recipient = managerEmail;
-
-      // 📌 요구사항 2: 메일제목 및 상단 헤더 바에서 [사고명]을 앞으로 끌어오고 사고번호를 뒤로 배치!
-      // 제목 예시: [사고 리포트] 컨테이너 바나나 미끄러짐 사고 (사고번호: 20260831-1)
       const subjectTitle = '[사고 리포트] ' + accTitle + ' (사고번호: ' + accNo + ')';
       const headerTitle = '🚨 [사고 관리 리포트] ' + accTitle + ' (사고번호: ' + accNo + ')';
 
@@ -138,13 +146,13 @@ export async function POST(req) {
         progressHtml +
 
         '<div style="background: #f8fafc; padding: 14px 18px; border-radius: 8px; font-size: 0.82rem; color: #64748b; border: 1px solid #e2e8f0; text-align: center;">' +
-          '본 이메일은 사고 관리 시스템에서 담당자 1:1 맞춤으로 자동 발송된 리포트입니다.' +
+          '본 이메일은 사고 관리 시스템에서 수신인 지정(To: ' + finalRecipientsStr + ')으로 자동 발송된 리포트입니다.' +
         '</div>' +
       '</div>';
 
       const mailOptions = {
         from: '"' + senderName + '" <' + senderEmail + '>',
-        to: recipient,
+        to: finalRecipientsStr,
         replyTo: aiGmail || senderEmail,
         subject: subjectTitle,
         html: mailHtml
@@ -156,14 +164,14 @@ export async function POST(req) {
 
       await transporter.sendMail(mailOptions);
       sentCount++;
-      sentResults.push({ accNo, recipient });
+      sentResults.push({ accNo, recipient: finalRecipientsStr });
     }
 
     return NextResponse.json({
       success: true,
       sentCount,
       sentResults,
-      message: '총 ' + sentCount + '건의 담당자 지정 사고 리포트가 성공적으로 발송되었습니다.'
+      message: '총 ' + sentCount + '건의 사고 리포트가 수신인 목록 전체(' + globalRecipients.join(', ') + ')에게 성공적으로 발송되었습니다.'
     }, { status: 200 });
 
   } catch (error) {
