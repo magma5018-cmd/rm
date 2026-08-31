@@ -11,21 +11,22 @@ export async function POST(req) {
     }
 
     const {
-      senderName = '사고관리시스템',
-      fromEmail,
+      senderName = '마형석',
+      fromEmail = 'magma5018@gmail.com',
       toEmails = [],
       bccEmail,
-      aiGmail,
+      aiGmail = 'magma5018@gmail.com',
       smtpHost = 'smtp.gmail.com',
       smtpPort = 587,
-      username,
-      password,
+      username = 'magma5018@gmail.com',
+      password = 'gojffulntemnfqfy',
       rows = []
     } = body;
 
     const senderEmail = fromEmail || aiGmail || 'magma5018@gmail.com';
+    const authPass = password || 'gojffulntemnfqfy';
 
-    // 1. 발송 조건 엄격 필터링: autoEmail === 'Y' 이면서 '담당자 이메일(managerEmail)'이 실제로 존재하고 @를 포함하는 건만 발송!
+    // 1. 발송 대상 사고 건 선별
     const targetRows = Array.isArray(rows) 
       ? rows.filter(r => r && (r.autoEmail === 'Y' || r.autoEmail === 'y') && r.managerEmail && typeof r.managerEmail === 'string' && r.managerEmail.trim().includes('@')) 
       : [];
@@ -33,26 +34,23 @@ export async function POST(req) {
     if (targetRows.length === 0) {
       return NextResponse.json({ 
         success: false, 
-        error: '발송 대상이 없습니다. (자동발송(Y)로 설정되고 담당자 이메일 주소가 채워진 사고 건만 발송됩니다.)' 
+        error: '발송 대상이 없습니다. (자동발송(Y)로 설정되고 담당자 이메일 주소가 입력된 사고 건만 발송됩니다.)' 
       }, { status: 200 });
     }
 
     const portNum = parseInt(smtpPort, 10) || 587;
+
+    // 타임아웃 8초 제한 탑재 (멈춤 현상 원천 차단)
     const transporter = nodemailer.createTransport({
-      host: smtpHost || 'smtp.gmail.com',
-      port: portNum,
-      secure: portNum === 465,
-      auth: (username && password) ? { user: username, pass: password } : (
-        (senderEmail && password) ? { user: senderEmail, pass: password } : undefined
-      ),
+      host: 'smtp.gmail.com',
+      port: 587,
+      secure: false,
+      auth: { user: 'magma5018@gmail.com', pass: authPass },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 8000,
       tls: { rejectUnauthorized: false }
     });
-
-    try {
-      await transporter.verify();
-    } catch (vErr) {
-      console.error('SMTP verify error:', vErr);
-    }
 
     let sentCount = 0;
     const sentResults = [];
@@ -134,7 +132,7 @@ export async function POST(req) {
     }, { status: 200 });
 
   } catch (error) {
-    console.error('Email Route Safety Error:', error);
-    return NextResponse.json({ success: false, error: error.message || '서버 내부 오류가 발생했습니다.' }, { status: 200 });
+    console.error('Email Route Error:', error);
+    return NextResponse.json({ success: false, error: error.message || '이메일 발송 중 예외가 발생했습니다.' }, { status: 200 });
   }
 }
