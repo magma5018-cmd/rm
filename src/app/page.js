@@ -3334,17 +3334,15 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
       )}
 
       {/* ─── SIDEBAR ─── */}
-      {/* ─── 튀어나오는 사이드바 핸들 버튼 (닫혀있을 때 노출) ─── */}
-      {!isSidebarOpen && (
-        <div 
-          className="sidebar-handle-btn"
-          onClick={() => setIsSidebarOpen(true)}
-          title="클릭하여 메뉴 열기"
-        >
-          <span style={{ fontSize: '1rem', color: '#60a5fa' }}>▶</span>
-          <span>메뉴</span>
-        </div>
-      )}
+      {/* ─── 세로 중앙 고정 토글 핸들 버튼 (열림: ◀ 닫기 / 닫힘: ▶ 메뉴) ─── */}
+      <div 
+        className={`sidebar-center-toggle-btn ${isSidebarOpen ? 'open' : 'closed'}`}
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        title={isSidebarOpen ? "클릭하여 메뉴 닫기" : "클릭하여 메뉴 열기"}
+      >
+        <span style={{ fontSize: '1rem', color: '#60a5fa' }}>{isSidebarOpen ? '◀' : '▶'}</span>
+        <span>{isSidebarOpen ? '닫기' : '메뉴'}</span>
+      </div>
 
       {/* ─── 사이드바 배경 어둡게 처리 (열렸을 때) ─── */}
       {isSidebarOpen && (
@@ -3356,15 +3354,8 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
 
       {/* ─── SIDEBAR OVERLAY ─── */}
       <aside className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
-        <div className="sidebar-brand" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>🗂 전사 사고 및 보험관리</span>
-          <button 
-            onClick={() => setIsSidebarOpen(false)}
-            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', borderRadius: '6px', width: '28px', height: '28px', cursor: 'pointer', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            title="메뉴 닫기"
-          >
-            ◀
-          </button>
+        <div className="sidebar-brand">
+          🗂 전사 사고 및 보험관리
         </div>
 
         <button className="sidebar-action-btn" style={{ marginTop: '16px' }} onClick={() => { setAiModalOpen(true); setIsSidebarOpen(false); }}>
