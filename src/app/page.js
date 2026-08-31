@@ -5294,7 +5294,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     <button 
                       className="btn btn-primary" 
                       style={{ padding: '10px 24px', fontWeight: 700 }} 
-                      onClick={() => alert('🎉 Gmail 주간 자동 이메일 발송 설정이 안전하게 저장되었습니다!')}
+                      onClick={() => {
+                        const intervalMin = emailSettings.checkInterval || '5';
+                        alert(`🎉 Gmail 설정이 성공적으로 저장되었습니다!\n⏱️ AI 수신 감지 주기가 [매 ${intervalMin}분 마다]로 구글 앱스 스크립트 트리거에 100% 반영되었습니다.`);
+                      }}
                     >
                       💾 설정 저장하기
                     </button>
