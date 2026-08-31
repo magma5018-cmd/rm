@@ -56,10 +56,9 @@ export async function POST(req) {
       const accContent = row.사고내용 || '내용 없음';
       const managerEmail = row.managerEmail.trim();
 
-      // 수신자 설정: 해당 사고의 담당자 이메일 (매니저 이메일)
       const recipient = managerEmail;
 
-      const mailHtml = '<div style="font-family: 'Malgun Gothic', sans-serif; padding: 24px; border: 1px solid #cbd5e1; border-radius: 12px; max-width: 700px; background: #ffffff; margin: 0 auto;">' +
+      const mailHtml = '<div style="font-family: sans-serif; padding: 24px; border: 1px solid #cbd5e1; border-radius: 12px; max-width: 700px; background: #ffffff; margin: 0 auto;">' +
         '<div style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; padding: 20px 24px; border-radius: 10px; margin-bottom: 20px;">' +
           '<h2 style="margin:0; font-size: 1.3rem; font-weight: 800;">🚨 [사고 관리 리포트] ' + accNo + '</h2>' +
           '<p style="margin: 6px 0 0 0; font-size: 0.88rem; opacity: 0.95;">담당자 전용 사고 진행 및 AI 답장 자동 업데이트 리포트입니다.</p>' +
