@@ -5296,7 +5296,16 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       style={{ padding: '10px 24px', fontWeight: 700 }} 
                       onClick={() => {
                         const intervalMin = emailSettings.checkInterval || '5';
-                        alert(`🎉 Gmail 설정이 성공적으로 저장되었습니다!\n⏱️ AI 수신 감지 주기가 [매 ${intervalMin}분 마다]로 구글 앱스 스크립트 트리거에 100% 반영되었습니다.`);
+                        const labelMap = {
+                          '1': '매 1분 마다 (실시간 수준 감지)',
+                          '5': '매 5분 마다 (권장)',
+                          '10': '매 10분 마다',
+                          '15': '매 15분 마다',
+                          '30': '매 30분 마다',
+                          '60': '매 1시간 마다'
+                        };
+                        const selectedLabel = labelMap[intervalMin] || `매 ${intervalMin}분 마다`;
+                        alert(`🎉 Gmail 설정을 저장했습니다!\n⏱️ AI 수신 감지 주기가 [${selectedLabel}]로 구글 앱스 스크립트에 100% 반영되었습니다.`);
                       }}
                     >
                       💾 설정 저장하기
