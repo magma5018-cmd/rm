@@ -5258,6 +5258,65 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     </button>
                     <button 
                       className="btn" 
+                      disabled={isTestingEmail}
+                      style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px 20px', fontWeight: 800, boxShadow: '0 4px 12px rgba(239,68,68,0.25)' }}
+                      onClick={async () => {
+                        const targetRows = rows.filter(r => r.managerEmail && r.managerEmail.includes('@') && (r.autoEmail !== 'N'));
+                        if (targetRows.length === 0) {
+                          alert('⚠️ 등록된 담당자 이메일 주소가 있는 발송 대상 사고 건이 없습니다.');
+                          return;
+                        }
+                        if (!confirm(`🚀 담당자 이메일이 등록된 ${targetRows.length}건의 사고 리포트를 지금 즉시 이메일로 발송하시겠습니까?`)) return;
+                        
+                        setIsTestingEmail(true);
+                        const time = new Date().toLocaleTimeString('ko-KR');
+                        setTestEmailLogs([
+                          `[${time}] 🚀 사고 리포트 이메일 즉시 발송 시작 (총 ${targetRows.length}건 대상)...`
+                        ]);
+                        
+                        let successCnt = 0;
+                        for (const row of targetRows) {
+                          const tCurrent = new Date().toLocaleTimeString('ko-KR');
+                          setTestEmailLogs(prev => [...prev, `[${tCurrent}] 📧 사고번호 [${row.사고번호}] ➔ 수신자(${row.managerEmail}) 전송 중...`]);
+                          try {
+                            const res = await fetch('/api/email/test', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                ...emailSettings,
+                                smtpHost: 'smtp.gmail.com',
+                                smtpPort: '587',
+                                fromEmail: row.managerEmail,
+                                accidentNo: row.사고번호,
+                                accidentName: row.사고명,
+                                aiGmail: emailSettings.aiGmail || 'magma5018@gmail.com',
+                                username: emailSettings.aiGmail || 'magma5018@gmail.com',
+                                password: emailSettings.gmailAppPassword || 'gojffulntemnfqfy'
+                              })
+                            });
+                            const data = await res.json();
+                            const tEnd = new Date().toLocaleTimeString('ko-KR');
+                            if (data.success) {
+                              successCnt++;
+                              setTestEmailLogs(prev => [...prev, `[${tEnd}] ✅ 사고번호 [${row.사고번호}] 이메일 전송 성공!`]);
+                            } else {
+                              setTestEmailLogs(prev => [...prev, `[${tEnd}] ❌ 사고번호 [${row.사고번호}] 전송 에러: ${data.error}`]);
+                            }
+                          } catch (err) {
+                            const tEnd = new Date().toLocaleTimeString('ko-KR');
+                            setTestEmailLogs(prev => [...prev, `[${tEnd}] ❌ 사고번호 [${row.사고번호}] 통신 에러: ${err.message}`]);
+                          }
+                        }
+                        
+                        const tFinal = new Date().toLocaleTimeString('ko-KR');
+                        setTestEmailLogs(prev => [...prev, `[${tFinal}] 🎉 총 ${targetRows.length}건 중 ${successCnt}건의 사고 리포트 이메일 즉시 발송 완료!`]);
+                        setIsTestingEmail(false);
+                      }}
+                    >
+                      🚀 사고 리포트 이메일 즉시 전체 발송
+                    </button>
+                    <button 
+                      className="btn" 
                       style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '10px 18px', fontWeight: 600 }}
                       onClick={async () => {
                         setIsTestingEmail(true);
