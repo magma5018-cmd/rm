@@ -3791,7 +3791,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>발생액 합계</span>
-                      <span style={{ fontSize: '1.35rem', fontWeight 800, color: 'var(--text)' }}>₩ {dashboardStats.totalOccur.toLocaleString()}</span>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--text)' }}>₩ {dashboardStats.totalOccur.toLocaleString()}</span>
                     </div>
                     <div style={{ fontSize: '0.68rem', color: '#475569', lineHeight: 1.3, background: '#f8fafc', padding: '6px 8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
                       💡 <strong>전체 접수건</strong> : 발생된 사고의 총 건수 및 발생액
@@ -3825,7 +3825,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>사고액 합계</span>
-                      <span style={{ fontSize: '1.35rem', fontWeight 800, color: '#10b981' }}>₩ {dashboardStats.totalNoClaimOccur.toLocaleString()}</span>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#10b981' }}>₩ {dashboardStats.totalNoClaimOccur.toLocaleString()}</span>
                     </div>
                     <div style={{ fontSize: '0.68rem', color: '#166534', lineHeight: 1.3, background: '#f0fdf4', padding: '6px 8px', borderRadius: '4px', border: '1px solid #bbf7d0' }}>
                       💡 <strong>면책/무이의</strong> : 비용 청구 없이 종결 완료된 건
@@ -3895,7 +3895,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>대상액 합계</span>
-                      <span style={{ fontSize: '1.35rem', fontWeight 800, color: '#f59e0b' }}>₩ {(dashboardStats.totalOccur - dashboardStats.totalNoClaimOccur).toLocaleString()}</span>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#f59e0b' }}>₩ {(dashboardStats.totalOccur - dashboardStats.totalNoClaimOccur).toLocaleString()}</span>
                     </div>
                     <div style={{ fontSize: '0.68rem', color: '#92400e', lineHeight: 1.3, background: '#fffbeb', padding: '6px 8px', borderRadius: '4px', border: '1px solid #fef3c7' }}>
                       💡 <strong>진행중 사건</strong> : 구상/보상 절차가 진행 중인 건
