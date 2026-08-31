@@ -3763,7 +3763,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                 </div>
               </div>
 
-              {/* 통계 카드 (슬림 스타일 + 산출 공식 및 상세 💡 설명 복원) */}
+              {/* 통계 카드 (상단 점선 위치 위로 상향 밀착 & 내부 여백 완벽 균등 정렬) */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '16px' }}>
                 
                 {/* 1️⃣ 전체사고현황 */}
@@ -3771,7 +3771,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                   className="panel" 
                   onClick={() => toggleDrill('card', 'all')}
                   style={{ 
-                    padding: '14px 18px', 
+                    padding: '12px 16px', 
                     border: (drillFilter?.type === 'card' && drillFilter?.value === 'all') ? '2px solid var(--primary)' : '1px solid var(--border)', 
                     boxShadow: (drillFilter?.type === 'card' && drillFilter?.value === 'all') ? '0 6px 18px rgba(37,99,235,0.12)' : 'none',
                     transform: (drillFilter?.type === 'card' && drillFilter?.value === 'all') ? 'translateY(-2px)' : 'none',
@@ -3782,10 +3782,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     transition: 'all 0.2s ease-in-out'
                   }}
                 >
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 700, paddingBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span>📊</span> 전체사고현황
                   </div>
-                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>접수 건수</span>
                       <span style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text)' }}>{dashboardStats.totalCount} 건</span>
@@ -3794,7 +3794,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>발생액 합계</span>
                       <span style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text)' }}>₩ {dashboardStats.totalOccur.toLocaleString()}</span>
                     </div>
-                    <div style={{ fontSize: '0.64rem', color: '#475569', lineHeight: 1.3, background: '#f8fafc', padding: '5px 7px', borderRadius: '4px', border: '1px solid #e2e8f0', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.64rem', color: '#475569', lineHeight: 1.35, background: '#f8fafc', padding: '5px 7px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
                       💡 <strong>전체 접수건</strong> : 발생 사고 총 건수 및 발생액<br />
                       💡 (미완료 + 종결 사건 전체 포함)
                     </div>
@@ -3806,7 +3806,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                   className="panel" 
                   onClick={() => toggleDrill('card', 'noClaim')}
                   style={{ 
-                    padding: '14px 18px', 
+                    padding: '12px 16px', 
                     border: (drillFilter?.type === 'card' && drillFilter?.value === 'noClaim') ? '2px solid #10b981' : '1px solid var(--border)', 
                     boxShadow: (drillFilter?.type === 'card' && drillFilter?.value === 'noClaim') ? '0 6px 18px rgba(16,185,129,0.12)' : 'none',
                     transform: (drillFilter?.type === 'card' && drillFilter?.value === 'noClaim') ? 'translateY(-2px)' : 'none',
@@ -3817,10 +3817,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     transition: 'all 0.2s ease-in-out'
                   }}
                 >
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 700, paddingBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ color: '#10b981' }}>🎉</span> 종결 (클레임없음)
                   </div>
-                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>종결 건수</span>
                       <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#10b981' }}>{dashboardStats.totalNoClaimCount} 건</span>
@@ -3829,19 +3829,19 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>사고액 합계</span>
                       <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#10b981' }}>₩ {dashboardStats.totalNoClaimOccur.toLocaleString()}</span>
                     </div>
-                    <div style={{ fontSize: '0.64rem', color: '#166534', lineHeight: 1.3, background: '#f0fdf4', padding: '5px 7px', borderRadius: '4px', border: '1px solid #bbf7d0', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.64rem', color: '#166534', lineHeight: 1.35, background: '#f0fdf4', padding: '5px 7px', borderRadius: '4px', border: '1px solid #bbf7d0' }}>
                       💡 <strong>면책/무이의</strong> : 손실 비용 없이 종결 완료 건<br />
                       💡 (회사 순 손실 0원 정산)
                     </div>
                   </div>
                 </div>
 
-                {/* 3️⃣ 종결 (클레임처리) - 배상/회수/순손실 공식 복원 */}
+                {/* 3️⃣ 종결 (클레임처리) */}
                 <div 
                   className="panel" 
                   onClick={() => toggleDrill('card', 'loss')}
                   style={{ 
-                    padding: '14px 18px', 
+                    padding: '12px 16px', 
                     border: (drillFilter?.type === 'card' && drillFilter?.value === 'loss') ? '2px solid #ef4444' : '2px solid #fee2e2', 
                     boxShadow: (drillFilter?.type === 'card' && drillFilter?.value === 'loss') ? '0 6px 18px rgba(239,68,68,0.12)' : 'none',
                     transform: (drillFilter?.type === 'card' && drillFilter?.value === 'loss') ? 'translateY(-2px)' : 'none',
@@ -3852,10 +3852,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     transition: 'all 0.2s ease-in-out'
                   }}
                 >
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 700, paddingBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ color: '#ef4444' }}>🧾</span> 종결 (클레임처리)
                   </div>
-                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>종결 건수</span>
                       <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ef4444' }}>{dashboardStats.totalCompCount || (dashboardStats.totalCount - dashboardStats.totalNoClaimCount)} 건</span>
@@ -3868,9 +3868,9 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>회사 순 손실</span>
-                      <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ef4444' }}>₩ {dashboardStats.totalLoss.toLocaleString()}</span>
+                      <span style={{ fontSize: '1.05rem', fontWeight 800, color: '#ef4444' }}>₩ {dashboardStats.totalLoss.toLocaleString()}</span>
                     </div>
-                    <div style={{ fontSize: '0.64rem', color: '#991b1b', lineHeight: 1.3, background: '#fff5f5', padding: '4px 7px', borderRadius: '4px', border: '1px solid #fecdd3', marginTop: '3px' }}>
+                    <div style={{ fontSize: '0.64rem', color: '#991b1b', lineHeight: 1.35, background: '#fff5f5', padding: '5px 7px', borderRadius: '4px', border: '1px solid #fecdd3' }}>
                       💡 <strong>회수액</strong> = 구상금 + 보험 보상 수령액<br />
                       💡 <strong>순 손실</strong> = 배상액 - 회수액 (최종 부담액)
                     </div>
@@ -3882,7 +3882,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                   className="panel" 
                   onClick={() => toggleDrill('card', 'claimTarget')}
                   style={{ 
-                    padding: '14px 18px', 
+                    padding: '12px 16px', 
                     border: (drillFilter?.type === 'card' && drillFilter?.value === 'claimTarget') ? '2px solid #f59e0b' : '1px solid var(--border)', 
                     boxShadow: (drillFilter?.type === 'card' && drillFilter?.value === 'claimTarget') ? '0 6px 18px rgba(245,158,11,0.12)' : 'none',
                     transform: (drillFilter?.type === 'card' && drillFilter?.value === 'claimTarget') ? 'translateY(-2px)' : 'none',
@@ -3893,10 +3893,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     transition: 'all 0.2s ease-in-out'
                   }}
                 >
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: 700, paddingBottom: '6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ color: '#f59e0b' }}>🔄</span> 진행중
                   </div>
-                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>진행 건수</span>
                       <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#f59e0b' }}>{dashboardStats.totalCount - dashboardStats.totalNoClaimCount} 건</span>
@@ -3905,7 +3905,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>대상액 합계</span>
                       <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#f59e0b' }}>₩ {(dashboardStats.totalOccur - dashboardStats.totalNoClaimOccur).toLocaleString()}</span>
                     </div>
-                    <div style={{ fontSize: '0.64rem', color: '#92400e', lineHeight: 1.3, background: '#fffbeb', padding: '4px 7px', borderRadius: '4px', border: '1px solid #fef3c7', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.64rem', color: '#92400e', lineHeight: 1.35, background: '#fffbeb', padding: '5px 7px', borderRadius: '4px', border: '1px solid #fef3c7' }}>
                       💡 <strong>진행중 사건</strong> : 보상/구상 진행 중 사건<br />
                       💡 (손실 금액 미확정 상태)
                     </div>
