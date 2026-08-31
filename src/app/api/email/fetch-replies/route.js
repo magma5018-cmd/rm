@@ -6,7 +6,7 @@ export async function POST(req) {
   try {
     const body = await req.json().catch(() => ({}));
     const gmailUser = body.aiGmail || 'magma5018@gmail.com';
-    const gmailAppPassword = body.gmailAppPassword || 'gojffulntemnfqfy'; // 16자리 앱비밀번호
+    const gmailAppPassword = body.gmailAppPassword || 'gojffulntemnfqfy';
 
     if (!gmailUser || !gmailAppPassword) {
       return NextResponse.json({ success: false, error: '지메일 계정 주소 또는 앱 비밀번호가 설정되지 않았습니다.' }, { status: 400 });
@@ -32,7 +32,7 @@ export async function POST(req) {
     const searchCriteria = ['UNSEEN'];
     const fetchOptions = {
       bodies: ['HEADER', 'TEXT', ''],
-      markSeen: true // 읽어온 메일은 읽음 처리하여 중복 방지
+      markSeen: true
     };
 
     const messages = await connection.search(searchCriteria, fetchOptions);
@@ -45,19 +45,23 @@ export async function POST(req) {
       const subject = parsed.subject || '';
       const textBody = parsed.text || parsed.html || '';
 
-      // 사고번호 추출 패턴 ([사고번호: 20260507-1] 또는 사고번호: 20260507-1)
+      // 사고번호 추출 패턴 ([사고번호: 20260507-1] 또는 사고번호: 20260507-1 등)
       const accidentNoMatch = subject.match(/(?:사고번호|사고|ID)[\s:]*([A-Za-z0-9-]+)/i);
       const accidentNo = accidentNoMatch ? accidentNoMatch[1] : null;
 
+      // 🔥 [엄격한 필터링] 사고번호가 명확히 포함된 메일만 골라내고 일반/개인 메일은 무시(Skip)
+      if (!accidentNo) {
+        continue;
+      }
+
       if (textBody) {
-        // 간단 AI 요약 헬퍼 (Gemini 연동)
         let summaryText = textBody.substring(0, 100).replace(/\n/g, ' ').trim();
         if (textBody.length > 50) {
           summaryText = `[AI 자동요약] ${summaryText}...`;
         }
 
         results.push({
-          accidentNo: accidentNo || '미지정',
+          accidentNo: accidentNo,
           subject: subject,
           from: parsed.from?.text || '',
           date: new Date().toISOString().split('T')[0],
