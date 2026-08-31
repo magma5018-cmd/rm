@@ -5422,8 +5422,12 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
 
                         setIsTestingEmail(true);
                         const time = new Date().toLocaleTimeString('ko-KR');
+                        const targetSummary = validTargetRows.map(r => `[${r.사고번호}] ${r.담당자 || '담당자'}(${r.managerEmail})`).join(', ');
+                        
                         setTestEmailLogs([
-                          `[${time}] 🚀 사고 리포트 이메일 즉시 발송 시작 (총 ${validTargetRows.length}건 대상)...`
+                          `[${time}] 🚀 사고 리포트 이메일 발송 시작 (발송 대상: 총 ${validTargetRows.length}건)...`,
+                          `[${time}] 🔍 [발송 타겟 수신자] ${targetSummary}`,
+                          `[${time}] 📤 지메일 메일 서버(smtp.gmail.com:587)로 1:1 리포트 패킷 전송 중...`
                         ]);
 
                         try {
@@ -5446,7 +5450,12 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                           const data = await res.json();
                           const tFinal = new Date().toLocaleTimeString('ko-KR');
                           if (data.success) {
-                            setTestEmailLogs(prev => [...prev, `[${tFinal}] 🎉 ${data.message || '담당자 지정 사고 리포트가 성공적으로 발송되었습니다.'}`]);
+                            const details = (data.sentResults || []).map(item => `[${tFinal}] ✅ [전송 성공] 사고번호: ${item.accNo} ➔ 수신자: ${item.recipient}`);
+                            setTestEmailLogs(prev => [
+                              ...prev,
+                              ...details,
+                              `[${tFinal}] 🎉 ${data.message || '담당자 지정 사고 리포트가 성공적으로 발송되었습니다.'}`
+                            ]);
                             alert(`🎉 [발송 완료]\n총 ${data.sentCount || validTargetRows.length}건의 사고 리포트가 담당자 이메일로 1:1 발송되었습니다.`);
                           } else {
                             setTestEmailLogs(prev => [...prev, `[${tFinal}] ❌ 발송 오류: ${data.error}`]);
