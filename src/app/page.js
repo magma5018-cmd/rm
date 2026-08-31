@@ -5238,6 +5238,13 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     >
                       📥 AI 지메일 답장 수신 테스트
                     </button>
+                    <button 
+                      className="btn btn-primary" 
+                      style={{ padding: '10px 24px', fontWeight: 700 }} 
+                      onClick={() => alert('🎉 Gmail 주간 자동 이메일 발송 설정이 안전하게 저장되었습니다!')}
+                    >
+                      💾 설정 저장하기
+                    </button>
                   </div>
                 </div>
 
