@@ -240,6 +240,8 @@ const causeDetailsMap = {
 
 export default function Home() {
   const [activeSmtpEngine, setActiveSmtpEngine] = useState('gmail');
+  const [recipientsList, setRecipientsList] = useState(['mhs810@hansol.com', 'magma5018@gmail.com']);
+  const [recipientInput, setRecipientInput] = useState('');
   const [emailSettings, setEmailSettings] = useState({
     senderName: '',
     fromEmail: '',
@@ -5047,6 +5049,58 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                   </div>
 
                   {/* Gmail 입력 폼 */}
+                  <div style={{ marginBottom: '20px', background: '#ffffff', padding: '16px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '8px', color: '#166534' }}>
+                      📩 수신인(To) 이메일 목록 (쉼표 , 또는 Enter 누르면 태그 등록)
+                    </label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', minHeight: '42px', padding: '8px 12px', background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                      {recipientsList.map((email, idx) => (
+                        <span key={idx} style={{ background: '#e0f2fe', color: '#0369a1', padding: '4px 10px', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 700, border: '1px solid #bae6fd', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          ✉️ {email}
+                          <button 
+                            onClick={() => setRecipientsList(recipientsList.filter((_, i) => i !== idx))}
+                            style={{ background: 'transparent', border: 'none', color: '#0284c7', fontSize: '0.9rem', cursor: 'pointer', padding: 0, lineHeight: 1, fontWeight: 800 }}
+                            title="삭제"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      ))}
+                      <input 
+                        type="text"
+                        value={recipientInput}
+                        onChange={e => {
+                          const val = e.target.value;
+                          if (val.includes(',') || val.includes(';')) {
+                            const parts = val.split(/[,;]/).map(s => s.trim()).filter(Boolean);
+                            const updated = [...new Set([...recipientsList, ...parts])];
+                            setRecipientsList(updated);
+                            setRecipientInput('');
+                          } else {
+                            setRecipientInput(val);
+                          }
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            if (recipientInput.trim()) {
+                              const emailClean = recipientInput.trim();
+                              if (!recipientsList.includes(emailClean)) {
+                                setRecipientsList([...recipientsList, emailClean]);
+                              }
+                              setRecipientInput('');
+                            }
+                          }
+                        }}
+                        placeholder="수신 이메일 작성 후 쉼표(,) 입력..."
+                        style={{ border: 'none', outline: 'none', background: 'transparent', fontSize: '0.85rem', flex: 1, minWidth: '220px' }}
+                      />
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '6px 0 0 0' }}>
+                      💡 주간 정기 자동 발송 및 테스트 발송 시 위 <strong>사각형 파란색 태그로 등록된 모든 이메일 수신자</strong>들에게 메시지가 동시 전송됩니다.
+                    </p>
+                  </div>
+
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '24px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>👤 발신자 성명</label>
@@ -5122,7 +5176,8 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                               ...emailSettings,
                               smtpHost: 'smtp.gmail.com',
                               smtpPort: '587',
-                              fromEmail: emailSettings.aiGmail || 'magma5018@gmail.com',
+                              fromEmail: recipientsList.join(', '), // 수신인 태그 전체 전달
+                              aiGmail: emailSettings.aiGmail || 'magma5018@gmail.com',
                               username: emailSettings.aiGmail || 'magma5018@gmail.com',
                               password: emailSettings.gmailAppPassword || 'gojffulntemnfqfy'
                             })
