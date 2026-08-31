@@ -3,46 +3,56 @@ import nodemailer from 'nodemailer';
 
 export async function POST(req) {
   try {
-    const body = await req.json();
+    let body = {};
+    try {
+      body = await req.json();
+    } catch (e) {
+      body = {};
+    }
+
     const {
       senderName = '사고관리시스템',
       fromEmail,
       toEmails = [],
       bccEmail,
       aiGmail,
-      smtpHost,
-      smtpPort = 25,
+      smtpHost = 'smtp.gmail.com',
+      smtpPort = 587,
       username,
       password,
       rows = []
     } = body;
 
-    if (!smtpHost || !fromEmail) {
-      return NextResponse.json({ success: false, error: '이메일 설정 및 메일 서버 주소를 확인해주세요.' }, { status: 400 });
-    }
+    const senderEmail = fromEmail || aiGmail || 'magma5018@gmail.com';
 
     // 1. 발송 조건 엄격 필터링: autoEmail === 'Y' 이면서 '담당자 이메일(managerEmail)'이 실제로 존재하고 @를 포함하는 건만 발송!
     const targetRows = Array.isArray(rows) 
-      ? rows.filter(r => (r.autoEmail === 'Y' || r.autoEmail === 'y') && r.managerEmail && typeof r.managerEmail === 'string' && r.managerEmail.trim().includes('@')) 
+      ? rows.filter(r => r && (r.autoEmail === 'Y' || r.autoEmail === 'y') && r.managerEmail && typeof r.managerEmail === 'string' && r.managerEmail.trim().includes('@')) 
       : [];
 
     if (targetRows.length === 0) {
       return NextResponse.json({ 
         success: false, 
         error: '발송 대상이 없습니다. (자동발송(Y)로 설정되고 담당자 이메일 주소가 채워진 사고 건만 발송됩니다.)' 
-      }, { status: 400 });
+      }, { status: 200 });
     }
 
-    const portNum = parseInt(smtpPort, 10) || 25;
+    const portNum = parseInt(smtpPort, 10) || 587;
     const transporter = nodemailer.createTransport({
-      host: smtpHost,
+      host: smtpHost || 'smtp.gmail.com',
       port: portNum,
       secure: portNum === 465,
-      auth: (username && password) ? { user: username, pass: password } : undefined,
+      auth: (username && password) ? { user: username, pass: password } : (
+        (senderEmail && password) ? { user: senderEmail, pass: password } : undefined
+      ),
       tls: { rejectUnauthorized: false }
     });
 
-    await transporter.verify();
+    try {
+      await transporter.verify();
+    } catch (vErr) {
+      console.error('SMTP verify error:', vErr);
+    }
 
     let sentCount = 0;
     const sentResults = [];
@@ -100,9 +110,9 @@ export async function POST(req) {
       '</div>';
 
       const mailOptions = {
-        from: '"' + senderName + '" <' + fromEmail + '>',
+        from: '"' + senderName + '" <' + senderEmail + '>',
         to: recipient,
-        replyTo: aiGmail || fromEmail,
+        replyTo: aiGmail || senderEmail,
         subject: '[사고 리포트] ' + accNo + ' - ' + accTitle,
         html: mailHtml
       };
@@ -121,10 +131,10 @@ export async function POST(req) {
       sentCount,
       sentResults,
       message: '총 ' + sentCount + '건의 담당자 지정 사고 리포트가 성공적으로 발송되었습니다.'
-    });
+    }, { status: 200 });
 
   } catch (error) {
-    console.error('Clean Email Route Error:', error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error('Email Route Safety Error:', error);
+    return NextResponse.json({ success: false, error: error.message || '서버 내부 오류가 발생했습니다.' }, { status: 200 });
   }
 }
