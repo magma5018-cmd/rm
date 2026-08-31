@@ -192,7 +192,12 @@ export async function GET() {
     return NextResponse.json({ rows, insRows });
   } catch (error) {
     console.error('Error fetching data from Sheets:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // 📌 예외 발생 시에도 화면 멈춤(⚡ 동기화 중...) 방지용 200 OK 안심 응답
+    return NextResponse.json({ 
+      rows: [], 
+      insRows: [],
+      error: error.message 
+    }, { status: 200 });
   }
 }
 
