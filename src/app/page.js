@@ -3868,7 +3868,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>회사 순 손실</span>
-                      <span style={{ fontSize: '1.05rem', fontWeight 800, color: '#ef4444' }}>₩ {dashboardStats.totalLoss.toLocaleString()}</span>
+                      <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ef4444' }}>₩ {dashboardStats.totalLoss.toLocaleString()}</span>
                     </div>
                     <div style={{ fontSize: '0.64rem', color: '#991b1b', lineHeight: 1.35, background: '#fff5f5', padding: '5px 7px', borderRadius: '4px', border: '1px solid #fecdd3' }}>
                       💡 <strong>회수액</strong> = 구상금 + 보험 보상 수령액<br />
