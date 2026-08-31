@@ -5491,9 +5491,13 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                             setTestEmailLogs(prev => [
                               ...prev,
                               `[${t2}] ✅ 지메일함 접속 성공!`,
-                              `[${t2}] 📥 읽지 않은 사고 답장 메일 ${data.processedCount}건 감지 완료!`,
-                              ...(data.items || []).map(item => `[${t2}] 🎯 사고번호: ${item.accidentNo} | 요약: ${item.summary}`)
+                              `[${t2}] 📥 읽지 않은 사고 답장 메일 ${data.processedCount}건 감지 및 시트 업데이트 완료!`,
+                              ...(data.items || []).map(item => `[${t2}] 🎯 사고번호: ${item.accidentNo} | 텍스트 요약: ${item.summary}`)
                             ]);
+                            // 📌 감지 완료 후 실시간 구글 시트 데이터 화면 자동 리프레시!
+                            if (data.processedCount > 0) {
+                              fetchData();
+                            }
                           } else {
                             setTestEmailLogs(prev => [...prev, `[${t2}] ❌ [지메일 수신 실패] ${data.error}`]);
                           }
