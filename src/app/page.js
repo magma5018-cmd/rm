@@ -1843,21 +1843,18 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
         const method = r.완료방법 || '';
         const isNoClaim = reportStatus.includes('클레임 없음') || method.includes('면책') || method.includes('무이의') || method.includes('무의이');
         
+        const isCompleted = reportStatus.startsWith('완료');
         if (drillFilter.value === 'all') {
           return true;
         }
         if (drillFilter.value === 'noClaim') {
-          return isNoClaim;
-        }
-        if (drillFilter.value === 'claimTarget') {
-          return !isNoClaim;
+          return isCompleted && isNoClaim;
         }
         if (drillFilter.value === 'loss') {
-          const isCompleted = reportStatus.startsWith('완료');
-          const loss = (!isCompleted || isNoClaim) ? 0 : parseAmount(r.손실액);
-          const comp = (!isCompleted || isNoClaim) ? 0 : parseAmount(r.배상액);
-          const recov = (!isCompleted || isNoClaim) ? 0 : parseAmount(r.회수액);
-          return loss > 0 || comp > 0 || recov > 0;
+          return isCompleted && !isNoClaim;
+        }
+        if (drillFilter.value === 'claimTarget') {
+          return !isCompleted;
         }
       }
       return false;
