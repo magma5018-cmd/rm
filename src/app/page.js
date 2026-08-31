@@ -3763,9 +3763,9 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                 </div>
               </div>
 
-              {/* 통계 카드 */}
+              {/* 통계 카드 (임원 요구사항 순서 및 명칭 반영) */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
-                {/* 1. 전체 사고 현황 */}
+                {/* 1️⃣ 전체사고현황 */}
                 <div 
                   className="panel" 
                   onClick={() => toggleDrill('card', 'all')}
@@ -3782,7 +3782,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                   }}
                 >
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>📊</span> 전체 사고 현황
+                    <span>📊</span> 전체사고현황
                   </div>
                   <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -3796,7 +3796,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                   </div>
                 </div>
 
-                {/* 2. 클레임 없음 */}
+                {/* 2️⃣ 종결 (클레임없음) */}
                 <div 
                   className="panel" 
                   onClick={() => toggleDrill('card', 'noClaim')}
@@ -3813,7 +3813,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                   }}
                 >
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ color: '#10b981' }}>✅</span> 클레임 없음 (면책/무이의)
+                    <span style={{ color: '#10b981' }}>✅</span> 종결 (클레임없음)
                   </div>
                   <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -3827,38 +3827,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                   </div>
                 </div>
 
-                {/* 3. 클레임 대상 (잔액) */}
-                <div 
-                  className="panel" 
-                  onClick={() => toggleDrill('card', 'claimTarget')}
-                  style={{ 
-                    padding: '20px', 
-                    border: (drillFilter?.type === 'card' && drillFilter?.value === 'claimTarget') ? '2px solid #f59e0b' : '1px solid var(--border)', 
-                    boxShadow: (drillFilter?.type === 'card' && drillFilter?.value === 'claimTarget') ? '0 8px 24px rgba(245,158,11,0.12)' : 'none',
-                    transform: (drillFilter?.type === 'card' && drillFilter?.value === 'claimTarget') ? 'translateY(-4px)' : 'none',
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    justifyContent: 'space-between',
-                    cursor: 'pointer',
-                    transition: 'all 0.25s ease-in-out'
-                  }}
-                >
-                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ color: '#f59e0b' }}>🔄</span> 클레임 대상 (잔액)
-                  </div>
-                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>진행 건수</span>
-                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#f59e0b' }}>{dashboardStats.totalCount - dashboardStats.totalNoClaimCount} 건</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>대상액 합계</span>
-                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#f59e0b' }}>₩ {(dashboardStats.totalOccur - dashboardStats.totalNoClaimOccur).toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 4. 배상 및 순 손실 */}
+                {/* 3️⃣ 종결 (클레임처리) */}
                 <div 
                   className="panel" 
                   onClick={() => toggleDrill('card', 'loss')}
@@ -3875,7 +3844,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                   }}
                 >
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ color: '#ef4444' }}>🚨</span> 배상 및 순 손실
+                    <span style={{ color: '#ef4444' }}>🎉</span> 종결 (클레임처리)
                   </div>
                   <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -3887,6 +3856,37 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>회사 순 손실</span>
                       <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#ef4444' }}>₩ {dashboardStats.totalLoss.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4️⃣ 진행중 */}
+                <div 
+                  className="panel" 
+                  onClick={() => toggleDrill('card', 'claimTarget')}
+                  style={{ 
+                    padding: '20px', 
+                    border: (drillFilter?.type === 'card' && drillFilter?.value === 'claimTarget') ? '2px solid #f59e0b' : '1px solid var(--border)', 
+                    boxShadow: (drillFilter?.type === 'card' && drillFilter?.value === 'claimTarget') ? '0 8px 24px rgba(245,158,11,0.12)' : 'none',
+                    transform: (drillFilter?.type === 'card' && drillFilter?.value === 'claimTarget') ? 'translateY(-4px)' : 'none',
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    justifyContent: 'space-between',
+                    cursor: 'pointer',
+                    transition: 'all 0.25s ease-in-out'
+                  }}
+                >
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: '#f59e0b' }}>🔄</span> 진행중
+                  </div>
+                  <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>진행 건수</span>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#f59e0b' }}>{dashboardStats.totalCount - dashboardStats.totalNoClaimCount} 건</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>대상액 합계</span>
+                      <span style={{ fontSize: '1.35rem', fontWeight: 800, color: '#f59e0b' }}>₩ {(dashboardStats.totalOccur - dashboardStats.totalNoClaimOccur).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
