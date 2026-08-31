@@ -41,6 +41,8 @@ export async function GET() {
       return {
         id,
         사고번호: getAccVal(row, '사고번호'),
+        autoEmail: getAccVal(row, '자동발송(Y/N)') || 'Y',
+        managerEmail: getAccVal(row, '담당자 이메일'),
         사고일: getAccVal(row, '사고일'),
         사고접수일: getAccVal(row, '사고접수일'),
         가이드제공일: getAccVal(row, '가이드제공일'),
