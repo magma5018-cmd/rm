@@ -257,6 +257,14 @@ export default function Home() {
     checkInterval: '5'
   });
   const [testEmailLogs, setTestEmailLogs] = useState([]);
+  const [aiSettings, setAiSettings] = useState({
+    apiKey: '',
+    model: 'gemini-2.5-flash',
+    customModel: ''
+  });
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [isTestingAi, setIsTestingAi] = useState(false);
+  const [aiTestLogs, setAiTestLogs] = useState([]);
   const [isTestingEmail, setIsTestingEmail] = useState(false);
   // 로그인 상태
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -3403,6 +3411,9 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
           <div className={`nav-item ${activeMenu === 'email_settings' ? 'active' : ''}`} onClick={() => { setActiveMenu('email_settings'); setIsSidebarOpen(false); }}>
             ⚙️ 이메일 발송 설정
           </div>
+          <div className={`nav-item ${activeMenu === 'ai_settings' ? 'active' : ''}`} onClick={() => { setActiveMenu('ai_settings'); setIsSidebarOpen(false); }}>
+            🤖 AI 모델 및 API 키 설정
+          </div>
         </div>
 
         <div className="sidebar-footer">
@@ -3420,6 +3431,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
             {activeMenu === 'weekly' && '주간 사고보험 리포트'}
             {activeMenu === 'weekly_report' && '주간업무'}
             {activeMenu === 'insurance' && '전사 보험가입 현황'}
+            {activeMenu === 'ai_settings' && 'AI 모델 및 API 키 설정'}
           </span>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', alignItems: 'center' }}>
             {/* 상단 저장 버튼 제거 (필터 바로 이동) */}
@@ -5051,7 +5063,143 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
             )}
 
             {/* ════════ ⚙️ 이메일 발송 설정 (2개 엔진 선택 구조) ════════ */}
-            {activeMenu === 'email_settings' && (
+            {activeMenu === 'ai_settings' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1000px', margin: '0 auto', padding: '10px' }}>
+              <div className="panel" style={{ padding: '32px', borderRadius: '16px', background: 'white' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderBottom: '1px solid var(--border)', paddingBottom: '20px', marginBottom: '24px' }}>
+                  <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>🤖</div>
+                  <div>
+                    <h2 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text)', margin: 0 }}>전사 AI 모델 및 API 키 통합 설정</h2>
+                    <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>시스템 전체(사고 접수 AI 분석, 이미지 시각 분석, 주간 리포트 요약 등)에서 사용할 Google Gemini AI의 API 키와 모델을 자유롭게 변경합니다.</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  {/* API 키 입력 */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text)' }}>🔑 Google Gemini API Key</label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input 
+                        type={showApiKey ? 'text' : 'password'} 
+                        value={aiSettings.apiKey} 
+                        onChange={e => setAiSettings({ ...aiSettings, apiKey: e.target.value })} 
+                        placeholder="AIzaSy... (발급받으신 Google Gemini API 키를 입력하세요)" 
+                        style={{ flex: 1, padding: '12px 14px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem' }} 
+                      />
+                      <button 
+                        className="btn btn-ghost" 
+                        onClick={() => setShowApiKey(!showApiKey)}
+                        style={{ padding: '0 16px', whiteSpace: 'nowrap' }}
+                      >
+                        {showApiKey ? '🙈 숨기기' : '👁️ 보기'}
+                      </button>
+                    </div>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>* 입력하지 않으시면 시스템 기본 탑재 API 키로 자동 운용됩니다.</span>
+                  </div>
+
+                  {/* AI 모델 선택 */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.9rem', fontWeight: 700, marginBottom: '8px', color: 'var(--text)' }}>🤖 AI 모델 선택 (적용할 모델 선택 또는 직접 입력)</label>
+                    <select 
+                      value={aiSettings.model} 
+                      onChange={e => setAiSettings({ ...aiSettings, model: e.target.value })} 
+                      style={{ width: '100%', padding: '12px 14px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', background: 'white', fontWeight: 600 }}
+                    >
+                      <option value="gemini-2.5-flash">🚀 gemini-2.5-flash (최신 고성능 추천 모델)</option>
+                      <option value="gemini-2.0-flash">⚡ gemini-2.0-flash (초고속 실시간 처리)</option>
+                      <option value="gemini-1.5-flash">🛡️ gemini-1.5-flash (표준 안정화 모델)</option>
+                      <option value="gemini-1.5-pro">🧠 gemini-1.5-pro (심화 추론 및 정밀 분석)</option>
+                      <option value="custom">✏️ 사용자 직접 입력 (모델명 직접 작성)</option>
+                    </select>
+                  </div>
+
+                  {/* 직접 입력 시 커스텀 모델명 입력창 */}
+                  {aiSettings.model === 'custom' && (
+                    <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '10px', border: '1px dashed var(--border)' }}>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>✏️ 사용자 지정 AI 모델명 입력</label>
+                      <input 
+                        type="text" 
+                        value={aiSettings.customModel} 
+                        onChange={e => setAiSettings({ ...aiSettings, customModel: e.target.value })} 
+                        placeholder="예: gemini-2.0-flash-exp 또는 기타 모델명" 
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid var(--border)', borderRadius: '6px', fontSize: '0.9rem' }} 
+                      />
+                    </div>
+                  )}
+
+                  {/* 실시간 테스트 로그 박스 */}
+                  {aiTestLogs.length > 0 && (
+                    <div style={{ background: '#0f172a', color: '#38bdf8', padding: '16px', borderRadius: '10px', fontFamily: 'monospace', fontSize: '0.82rem', lineHeight: 1.6, maxHeight: '200px', overflowY: 'auto' }}>
+                      {aiTestLogs.map((log, i) => (
+                        <div key={i}>{log}</div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 하단 버튼 그룹 */}
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '20px', marginTop: '10px' }}>
+                    <button 
+                      className="btn" 
+                      disabled={isTestingAi}
+                      style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#166534', padding: '10px 20px', fontWeight: 700 }}
+                      onClick={async () => {
+                        setIsTestingAi(true);
+                        const effectiveModel = aiSettings.model === 'custom' ? (aiSettings.customModel || 'gemini-1.5-flash') : aiSettings.model;
+                        const time = new Date().toLocaleTimeString('ko-KR');
+                        setAiTestLogs([
+                          `[${time}] 🔄 Google Gemini API 서버 통신 확인 중...`,
+                          `[${time}] 🤖 지정된 AI 모델 [${effectiveModel}] 연결 시도 중...`
+                        ]);
+                        try {
+                          const res = await fetch('/api/ai/report', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              prompt: 'Hello! Please respond with OK.',
+                              model: effectiveModel,
+                              apiKey: aiSettings.apiKey
+                            })
+                          });
+                          const data = await res.json();
+                          const t2 = new Date().toLocaleTimeString('ko-KR');
+                          if (data.report || data.success) {
+                            setAiTestLogs(prev => [
+                              ...prev,
+                              `[${t2}] ✅ [연결 성공] ${effectiveModel} 모델이 정상 동작합니다! (응답 완료)`
+                            ]);
+                          } else {
+                            setAiTestLogs(prev => [...prev, `[${t2}] ❌ [연결 실패] ${data.error || '응답이 비어있습니다.'}`]);
+                          }
+                        } catch (err) {
+                          const t2 = new Date().toLocaleTimeString('ko-KR');
+                          setAiTestLogs(prev => [...prev, `[${t2}] ❌ [통신 에러] ${err.message}`]);
+                        } finally {
+                          setIsTestingAi(false);
+                        }
+                      }}
+                    >
+                      🧪 AI 모델 및 API 키 연결 테스트
+                    </button>
+                    <button 
+                      className="btn btn-primary" 
+                      style={{ padding: '10px 24px', fontWeight: 700 }} 
+                      onClick={() => {
+                        const effectiveModel = aiSettings.model === 'custom' ? (aiSettings.customModel || 'gemini-1.5-flash') : aiSettings.model;
+                        if (typeof window !== 'undefined') {
+                          localStorage.setItem('user_ai_settings', JSON.stringify(aiSettings));
+                        }
+                        alert(`🎉 AI 설정이 성공적으로 저장되었습니다!\n🤖 적용된 모델: [${effectiveModel}]\n🔑 API 키: ${aiSettings.apiKey ? '사용자 지정 API 키 저장됨' : '기본 시스템 API 키 운용'}`);
+                      }}
+                    >
+                      💾 설정 저장하기
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeMenu === 'email_settings' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                 
                 {/* 1️⃣ [상단 1번 카드] Gmail 계정 전송 설정 (현재 1순위) */}
