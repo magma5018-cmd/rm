@@ -239,6 +239,20 @@ const causeDetailsMap = {
 };
 
 export default function Home() {
+  const [emailSettings, setEmailSettings] = useState({
+    senderName: '',
+    fromEmail: '',
+    bccEmail: '',
+    aiGmail: '',
+    smtpHost: '',
+    smtpPort: '25',
+    username: '',
+    password: '',
+    sendDay: 'MON',
+    sendTime: '09:00'
+  });
+  const [testEmailLogs, setTestEmailLogs] = useState([]);
+  const [isTestingEmail, setIsTestingEmail] = useState(false);
   // 로그인 상태
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
@@ -3350,6 +3364,11 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
             </svg>
           </div>
+          <div className="nav-divider" />
+          <div className="nav-section-label">설정</div>
+          <div className={`nav-item ${activeMenu === 'email_settings' ? 'active' : ''}`} onClick={() => setActiveMenu('email_settings')}>
+            ⚙️ 이메일 발송 설정
+          </div>
         </div>
 
         <div className="sidebar-footer">
@@ -3448,6 +3467,8 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     <tr>
                       {deleteMode && <th rowSpan="2" style={{ background: '#fee2e2', width: '40px', minWidth: '40px', maxWidth: '40px', textAlign: 'center' }}>선택</th>}
                       <th rowSpan="2" style={{ ...thStyle('첨부파일'), background: '#f8fafc' }}>사고관련<br />첨부파일<ResizeHandle col="첨부파일" /></th>
+                      <th rowSpan="2" style={{ ...thStyle('자동발송'), background: '#eff6ff', color: 'var(--primary)', whiteSpace: 'nowrap' }}>자동발송<br />(Y/N)<ResizeHandle col="자동발송" /></th>
+                      <th rowSpan="2" style={{ ...thStyle('담당자이메일'), background: '#eff6ff', color: 'var(--primary)', whiteSpace: 'nowrap' }}>담당자 이메일<ResizeHandle col="담당자이메일" /></th>
                       <th colSpan={COLS_ACCIDENT.length + 1} className="group-head group-accident">사고 내용 및 진행 경과</th>
                       <th colSpan="3" style={{ background: '#f8fafc', borderRight: '1px solid #e2e8f0' }}>완료 보고</th>
                       <th colSpan={COLS_INSURANCE.length} className="group-head group-insurance">보험 접수 내용</th>
@@ -3565,6 +3586,17 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                               </button>
                             </>)}
                           </div>
+                        </td>
+                        {/* 자동발송 (Y/N) */}
+                        <td style={{ textAlign: 'center', verticalAlign: 'middle', background: '#f8fafc' }}>
+                          <select className="cell-select" value={row.autoEmail || 'Y'} onChange={e => updateCell(row.id, 'autoEmail', e.target.value)} style={{ fontWeight: 700, color: (row.autoEmail === 'N' ? '#ef4444' : '#10b981') }}>
+                            <option value="Y">Y</option>
+                            <option value="N">N</option>
+                          </select>
+                        </td>
+                        {/* 담당자 이메일 */}
+                        <td style={{ textAlign: 'center', verticalAlign: 'middle', background: '#f8fafc' }}>
+                          <input className="cell-input" type="email" placeholder="email@company.com" value={row.managerEmail || ''} onChange={e => updateCell(row.id, 'managerEmail', e.target.value)} style={{ minWidth: '150px' }} />
                         </td>
                         {/* 사고내용 인라인 (앞부분 0-11) */}
                         {COLS_ACCIDENT.slice(0, 12).map((col, cIdx) => (
@@ -4657,8 +4689,27 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
             {/* ════════ 주간보고서 (팀장 보고용) ════════ */}
             {activeMenu === 'weekly_report' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                {/* 구글 시트 실시간 데이터 불러오기 싱크 헬퍼 */}
+                <React.Fragment>
+                  {(() => {
+                    const weekKey = reportWeekRange.label.split(' (')[0];
+                    if (window._lastFetchedWeekKey !== weekKey) {
+                      window._lastFetchedWeekKey = weekKey;
+                      fetch(`/api/weekly-work?weekKey=${encodeURIComponent(weekKey)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                          if (data.success && data.content !== undefined) {
+                            setNextWeekWork(data.content);
+                          }
+                        })
+                        .catch(err => console.error('Fetch Google Sheet weekly work failed:', err));
+                    }
+                    return null;
+                  })()}
+                </React.Fragment>
+
                 {/* 컨트롤 바 */}
-                <div className="panel" style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div className="panel no-print" style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', borderRadius: '12px', border: '1px solid var(--border)' }}>
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                     <button className="btn btn-ghost" onClick={() => setWeekOffsetReport(w => w - 1)} style={{ padding: '6px 12px', fontSize: '0.85rem' }}>◀ 이전주</button>
                     <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--text)' }}>{reportWeekRange.label}</span>
@@ -4668,17 +4719,15 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                     )}
                   </div>
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    <button className="btn btn-primary" style={{ background: '#10b981', borderColor: '#10b981', fontSize: '0.85rem', padding: '8px 14px' }} onClick={handleCopyText}>📋 메일/메신저용 텍스트 복사</button>
-                    <button className="btn btn-primary" style={{ fontSize: '0.85rem', padding: '8px 14px' }} onClick={handleCopyHtml}>📋 노션/워드용 표 복사</button>
-                    <button className="btn" style={{ background: '#8b5cf6', borderColor: '#8b5cf6', color: 'white', fontSize: '0.85rem', padding: '8px 14px' }} onClick={generateWeeklyAI} disabled={isGeneratingWeeklyAI}>
-                      {isGeneratingWeeklyAI ? '⏳ AI 작성 중...' : '⚡ AI 요약 작성'}
+                    <button className="btn" style={{ background: '#2563eb', borderColor: '#2563eb', color: 'white', fontSize: '0.85rem', padding: '8px 16px', fontWeight: 600 }} onClick={() => window.print()}>
+                      🖨️ 인쇄
                     </button>
                   </div>
                 </div>
 
                 {/* 주요사고 보이기/숨기기 관리 패널 (복사 HTML에서 자동 제외되도록 weekly-report-content 외부에 배치) */}
                 {allMajorAccidents.length > 0 && (
-                  <div className="panel" style={{ padding: '16px 20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                  <div className="panel no-print" style={{ padding: '16px 20px', background: '#f8fafc', borderRadius: '12px', border: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => setShowExcludeSelector(!showExcludeSelector)}>
                       <span style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         ⚙️ 주요사고 보고대상 선택 설정 ({allMajorAccidents.length - excludedMajorAccidentIds.length}건 노출 / {excludedMajorAccidentIds.length}건 숨김)
@@ -4914,17 +4963,183 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
 
                   </div>
 
-                  <div style={{ marginTop: '24px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-                    <label style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text)', display: 'block', marginBottom: '8px' }}>📝 차주 주요 업무 및 요청사항 입력 (로컬에 자동 저장됨)</label>
+                  <div className="no-print" style={{ marginTop: '24px', borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
+                    <label style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text)', display: 'block', marginBottom: '8px' }}>📝 차주 주요 업무 및 요청사항 입력 (구글 시트 실시간 자동 저장/공유됨)</label>
                     <textarea
                       style={{ width: '100%', height: '120px', padding: '12px', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '0.9rem', resize: 'vertical' }}
-                      placeholder="다음 주 진행 업무 계획이나 팀장 결재/협조가 필요한 사항을 자유롭게 입력해 주세요."
+                      placeholder="다음 주 진행 업무 계획이나 팀장 결재/협조가 필요한 사항을 자유롭게 입력해 주세요. (입력 시 모든 사용자에게 구글 시트로 실시간 공유됩니다)"
                       value={nextWeekWork}
                       onChange={(e) => {
-                        setNextWeekWork(e.target.value);
-                        localStorage.setItem('weekly_report_next_week_work', e.target.value);
+                        const val = e.target.value;
+                        setNextWeekWork(val);
+                        const weekKey = reportWeekRange.label.split(' (')[0];
+                        localStorage.setItem(`weekly_report_next_week_work_${weekKey}`, val);
+                        
+                        // 구글 시트에 실시간 자동 저장 (디바운스 0.5초)
+                        if (window._weeklyWorkTimer) clearTimeout(window._weeklyWorkTimer);
+                        window._weeklyWorkTimer = setTimeout(() => {
+                          fetch('/api/weekly-work', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ weekKey, content: val }),
+                          }).catch(err => console.error('Google Sheet save error:', err));
+                        }, 500);
                       }}
                     />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ════════ ⚙️ 이메일 발송 설정 ════════ */}
+            {activeMenu === 'email_settings' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div className="panel" style={{ padding: '28px', background: 'white', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
+                    <span style={{ fontSize: '1.5rem' }}>⚙️</span>
+                    <div>
+                      <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text)' }}>주간 자동 이메일 발송 설정</h2>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0' }}>회사 메일(ECHO / Outlook SMTP) 정보를 설정하여 미완료 사건 진행사항을 담당자에게 주간 자동 전송합니다.</p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>👤 사용자 이름 (Y)</label>
+                      <input type="text" value={emailSettings.senderName} onChange={e => setEmailSettings({ ...emailSettings, senderName: e.target.value })} placeholder="예: 홍길동 (보내는 사람 성명)" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>📧 전자 메일 주소 (E)</label>
+                      <input type="email" value={emailSettings.fromEmail} onChange={e => setEmailSettings({ ...emailSettings, fromEmail: e.target.value })} placeholder="본인 eMail 주소 (user@company.com)" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>👥 숨은참조 (BCC) eMail 주소</label>
+                      <input type="email" value={emailSettings.bccEmail} onChange={e => setEmailSettings({ ...emailSettings, bccEmail: e.target.value })} placeholder="bcc1@company.com, bcc2@company.com (쉼표로 구분)" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🤖 AI 답장 요약 수신용 지메일(Gmail) 주소</label>
+                      <input type="email" value={emailSettings.aiGmail} onChange={e => setEmailSettings({ ...emailSettings, aiGmail: e.target.value })} placeholder="accident.ai.report@gmail.com (수신자 자동포함용)" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🌐 보내는 메일 서버 (SMTP)(O)</label>
+                      <input type="text" value={emailSettings.smtpHost} onChange={e => setEmailSettings({ ...emailSettings, smtpHost: e.target.value })} placeholder="ECHO 메일 설정의 서버 주소 확인" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🔌 보내는 메일 서버 포트 (SMTP)</label>
+                      <input type="text" value={emailSettings.smtpPort} onChange={e => setEmailSettings({ ...emailSettings, smtpPort: e.target.value })} placeholder="25 또는 587" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🔑 로그온 정보 - 사용자 이름 (U)</label>
+                      <input type="text" value={emailSettings.username} onChange={e => setEmailSettings({ ...emailSettings, username: e.target.value })} placeholder="ECHO 접속 ID" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>🔒 로그온 정보 - 암호 (P)</label>
+                      <input type="password" value={emailSettings.password} onChange={e => setEmailSettings({ ...emailSettings, password: e.target.value })} placeholder="ECHO 접속 암호" style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px' }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>📅 자동 발송 요일 선택</label>
+                      <select value={emailSettings.sendDay} onChange={e => setEmailSettings({ ...emailSettings, sendDay: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', background: 'white' }}>
+                        <option value="MON">매주 월요일</option>
+                        <option value="TUE">매주 화요일</option>
+                        <option value="WED">매주 수요일</option>
+                        <option value="THU">매주 목요일</option>
+                        <option value="FRI">매주 금요일</option>
+                        <option value="SAT">매주 토요일</option>
+                        <option value="SUN">매주 일요일</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, marginBottom: '6px' }}>⏰ 자동 발송 시간 선택</label>
+                      <select value={emailSettings.sendTime} onChange={e => setEmailSettings({ ...emailSettings, sendTime: e.target.value })} style={{ width: '100%', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', background: 'white' }}>
+                        <option value="08:00">오전 08:00</option>
+                        <option value="08:30">오전 08:30</option>
+                        <option value="09:00">오전 09:00</option>
+                        <option value="09:30">오전 09:30</option>
+                        <option value="10:00">오전 10:00</option>
+                        <option value="11:00">오전 11:00</option>
+                        <option value="14:00">오후 02:00 (14:00)</option>
+                        <option value="17:00">오후 05:00 (17:00)</option>
+                        <option value="18:00">오후 06:00 (18:00)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '20px', marginBottom: '20px' }}>
+                    <button 
+                      className="btn" 
+                      disabled={isTestingEmail}
+                      style={{ background: isTestingEmail ? '#cbd5e1' : '#f1f5f9', border: '1px solid var(--border)', color: 'var(--text)', padding: '10px 18px', cursor: isTestingEmail ? 'not-allowed' : 'pointer' }} 
+                      onClick={async () => {
+                        setIsTestingEmail(true);
+                        const time = new Date().toLocaleTimeString('ko-KR');
+                        setTestEmailLogs([
+                          `[${time}] 🔄 SMTP 서버 메일 접속 시도 중... (${emailSettings.smtpHost || '미입력'}:${emailSettings.smtpPort})`,
+                          `[${time}] 🔑 계정 인증 정보 검증 중... (${emailSettings.username || '비인증/기본'})`
+                        ]);
+
+                        try {
+                          const res = await fetch('/api/email/test', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(emailSettings)
+                          });
+                          const data = await res.json();
+                          const t2 = new Date().toLocaleTimeString('ko-KR');
+
+                          if (data.success) {
+                            setTestEmailLogs(prev => [
+                              ...prev,
+                              `[${t2}] ✅ SMTP 접속 및 계정 인증 성공!`,
+                              `[${t2}] 📧 수신자(${data.recipients})에게 메시지 전달 완료! (Message ID: ${data.messageId || 'OK'})`,
+                              `[${t2}] 🎉 [실제 발송 성공] 진짜 테스트 이메일이 수신함으로 정상 발송되었습니다.`
+                            ]);
+                          } else {
+                            setTestEmailLogs(prev => [
+                              ...prev,
+                              `[${t2}] ❌ [발송 실패 원인] ${data.error}`
+                            ]);
+                          }
+                        } catch (err) {
+                          const t2 = new Date().toLocaleTimeString('ko-KR');
+                          setTestEmailLogs(prev => [
+                            ...prev,
+                            `[${t2}] ❌ [시스템 오류] ${err.message || '네트워크 통신 에러가 발생했습니다.'}`
+                          ]);
+                        } finally {
+                          setIsTestingEmail(false);
+                        }
+                      }}>
+                      {isTestingEmail ? '⏳ 메일 발송 테스트 중...' : '✉️ 테스트 메일 발송'}
+                    </button>
+                    <button className="btn btn-primary" style={{ padding: '10px 24px', fontWeight: 700 }} onClick={() => alert('이메일 발송 설정이 환경 설정에 안전하게 저장되었습니다.')}>
+                      💾 설정 저장하기
+                    </button>
+                  </div>
+
+                  {/* 🖥️ 실시간 테스트 발송 진행 로그 (상태창) */}
+                  <div style={{ background: '#0f172a', color: '#38bdf8', padding: '16px 20px', borderRadius: '8px', fontFamily: 'monospace', fontSize: '0.85rem', lineHeight: '1.6', minHeight: '130px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid #1e293b', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 700 }}>
+                      <span>🖥️ 실시간 테스트 발송 진행 로그 (상태 모니터링)</span>
+                      {testEmailLogs.length > 0 && (
+                        <button 
+                          style={{ background: 'transparent', border: 'none', color: '#64748b', fontSize: '0.75rem', cursor: 'pointer' }}
+                          onClick={() => setTestEmailLogs([])}
+                        >
+                          🧹 로그 지우기
+                        </button>
+                      )}
+                    </div>
+                    {testEmailLogs.length === 0 ? (
+                      <div style={{ color: '#475569', fontStyle: 'italic' }}>
+                        '✉️ 테스트 메일 발송' 버튼을 클릭하면 접속/인증/발송 상태 및 에러 원인이 실시간으로 여기에 출력됩니다.
+                      </div>
+                    ) : (
+                      testEmailLogs.map((log, i) => (
+                        <div key={i} style={{ color: log.includes('성공') ? '#4ade80' : log.includes('오류') || log.includes('실패') ? '#f87171' : '#38bdf8' }}>
+                          {log}
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>

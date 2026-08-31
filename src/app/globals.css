@@ -671,5 +671,102 @@ tbody tr:last-child td { border-bottom: none; }
   animation: spin 1s linear infinite;
 }
 
+/* === PRINT STYLES (상단 헤더 제거 & 순백색 완벽 A4) === */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm 15mm;
+  }
 
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-shadow: none !important;
+  }
 
+  html, body, #__next, div, main, .main-content, .content-area {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+    display: block !important;
+    float: none !important;
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* 사이드바, 상단 탑바/헤더, 인쇄 제외 버튼 모두 완벽 숨김 */
+  .sidebar,
+  header,
+  .header,
+  .top-bar,
+  .topbar,
+  .no-print,
+  div[class*="header"],
+  div[style*="height: 68px"],
+  div[style*="var(--header-height)"] {
+    display: none !important;
+  }
+
+  /* 인쇄용 메인 콘텐츠 패널 스타일 */
+  .panel {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+
+  /* 주간 보고서 컨텐츠 영역 */
+  #weekly-report-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  /* 배경색 회색을 흰색으로 변경 */
+  table, tr, td, th {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+  }
+
+  /* 테이블 헤더 구분용 스타일 */
+  th {
+    background-color: #f8fafc !important;
+    border-bottom: 2px solid #475569 !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+  }
+
+  tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  th, td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 6px 8px !important;
+    font-size: 9.5pt !important;
+  }
+
+  h1, h2, h3, h4 {
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+  }
+}

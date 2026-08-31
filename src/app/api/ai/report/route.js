@@ -13,6 +13,24 @@ export async function POST(request) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
+    if (body.isWeeklyReport) {
+      const weeklyPrompt = `
+너는 한솔로지스틱스의 물류 사고 및 보험 관리 전문가야.
+다음의 주간 사고/보험 현황 데이터를 정밀 분석하여, 팀장님께 주간보고 시 상단에 배치할 **"종합 요약 및 평가 총평(2~3줄)"**을 매끄럽고 격식 있는 어조로 작성해줘.
+
+[주간 현황 데이터]
+${body.weeklyDataText}
+
+[작성 규칙]
+1. 인사말이나 부연설명 없이 오직 2~3줄의 핵심 요약 및 평가 내용만 반환할 것.
+2. 수치(사고 건수, 총 사고액, 손실액 등)와 일정(보험 만기 임박 건)에 대한 구체적인 시사점이나 조치 제안을 포함할 것.
+`;
+      console.log('Generating Weekly AI Summary via Gemini...');
+      const result = await model.generateContent([{ text: weeklyPrompt }]);
+      const reportText = result.response.text();
+      return NextResponse.json({ success: true, report: reportText });
+    }
+
     const carriageType = body.qCarriageType;
     const isIntl = carriageType === 'international';
     const isDom = carriageType === 'domestic';
