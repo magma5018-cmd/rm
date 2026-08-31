@@ -5410,58 +5410,55 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       disabled={isTestingEmail}
                       style={{ background: '#ef4444', color: 'white', border: 'none', padding: '10px 20px', fontWeight: 800, boxShadow: '0 4px 12px rgba(239,68,68,0.25)' }}
                       onClick={async () => {
-                        const targetRows = rows.filter(r => r.managerEmail && r.managerEmail.includes('@') && (r.autoEmail !== 'N'));
-                        if (targetRows.length === 0) {
-                          alert('⚠️ 등록된 담당자 이메일 주소가 있는 발송 대상 사고 건이 없습니다.');
+                        // 필터링: autoEmail === 'Y' 이면서 managerEmail 주소가 실제로 입력되어 있는 사고 건만 발송
+                        const validTargetRows = rows.filter(r => (r.autoEmail === 'Y' || r.autoEmail === 'y') && r.managerEmail && typeof r.managerEmail === 'string' && r.managerEmail.includes('@'));
+                        
+                        if (validTargetRows.length === 0) {
+                          alert('⚠️ 발송 가능한 대상이 없습니다!\n\n* 조건: [자동발송(Y/N)] 열이 "Y"로 설정되어 있고, [담당자 이메일] 열에 실제 이메일 주소가 작성되어 있는 사고만 발송됩니다.');
                           return;
                         }
-                        if (!confirm(`🚀 담당자 이메일이 등록된 ${targetRows.length}건의 사고 리포트를 지금 즉시 이메일로 발송하시겠습니까?`)) return;
-                        
+
+                        if (!confirm(`🚀 담당자 이메일이 등록된 ${validTargetRows.length}건의 사고 리포트를 해당 담당자에게 즉시 발송하시겠습니까?`)) return;
+
                         setIsTestingEmail(true);
                         const time = new Date().toLocaleTimeString('ko-KR');
                         setTestEmailLogs([
-                          `[${time}] 🚀 사고 리포트 이메일 즉시 발송 시작 (총 ${targetRows.length}건 대상)...`
+                          `[${time}] 🚀 사고 리포트 이메일 즉시 발송 시작 (총 ${validTargetRows.length}건 대상)...`
                         ]);
-                        
-                        let successCnt = 0;
-                        for (const row of targetRows) {
-                          const tCurrent = new Date().toLocaleTimeString('ko-KR');
-                          setTestEmailLogs(prev => [...prev, `[${tCurrent}] 📧 사고번호 [${row.사고번호}] ➔ 수신자(${row.managerEmail}) 전송 중...`]);
-                          try {
-                            const res = await fetch('/api/email/test', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({
-                                ...emailSettings,
-                                smtpHost: 'smtp.gmail.com',
-                                smtpPort: '587',
-                                fromEmail: emailSettings.aiGmail || 'magma5018@gmail.com',
-                                toEmails: recipientsList,
-                                accidentNo: row.사고번호,
-                                accidentName: row.사고명,
-                                aiGmail: emailSettings.aiGmail || 'magma5018@gmail.com',
-                                username: emailSettings.aiGmail || 'magma5018@gmail.com',
-                                password: emailSettings.gmailAppPassword || 'gojffulntemnfqfy',
-                                rows: [row]
-                              })
-                            });
-                            const data = await res.json();
-                            const tEnd = new Date().toLocaleTimeString('ko-KR');
-                            if (data.success) {
-                              successCnt++;
-                              setTestEmailLogs(prev => [...prev, `[${tEnd}] ✅ 사고번호 [${row.사고번호}] 이메일 전송 성공!`]);
-                            } else {
-                              setTestEmailLogs(prev => [...prev, `[${tEnd}] ❌ 사고번호 [${row.사고번호}] 전송 에러: ${data.error}`]);
-                            }
-                          } catch (err) {
-                            const tEnd = new Date().toLocaleTimeString('ko-KR');
-                            setTestEmailLogs(prev => [...prev, `[${tEnd}] ❌ 사고번호 [${row.사고번호}] 통신 에러: ${err.message}`]);
+
+                        try {
+                          const res = await fetch('/api/email/send-reports', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              senderName: emailSettings.senderName || '마형석',
+                              fromEmail: emailSettings.aiGmail || 'magma5018@gmail.com',
+                              toEmails: recipientsList,
+                              bccEmail: emailSettings.bccEmail,
+                              aiGmail: emailSettings.aiGmail || 'magma5018@gmail.com',
+                              smtpHost: 'smtp.gmail.com',
+                              smtpPort: '587',
+                              username: emailSettings.aiGmail || 'magma5018@gmail.com',
+                              password: emailSettings.gmailAppPassword || 'gojffulntemnfqfy',
+                              rows: validTargetRows
+                            })
+                          });
+                          const data = await res.json();
+                          const tFinal = new Date().toLocaleTimeString('ko-KR');
+                          if (data.success) {
+                            setTestEmailLogs(prev => [...prev, `[${tFinal}] 🎉 ${data.message || '담당자 지정 사고 리포트가 성공적으로 발송되었습니다.'}`]);
+                            alert(`🎉 [발송 완료]\n총 ${data.sentCount || validTargetRows.length}건의 사고 리포트가 담당자 이메일로 1:1 발송되었습니다.`);
+                          } else {
+                            setTestEmailLogs(prev => [...prev, `[${tFinal}] ❌ 발송 오류: ${data.error}`]);
+                            alert('❌ 발송 오류: ' + data.error);
                           }
+                        } catch (err) {
+                          const tFinal = new Date().toLocaleTimeString('ko-KR');
+                          setTestEmailLogs(prev => [...prev, `[${tFinal}] ❌ 통신 에러: ${err.message}`]);
+                          alert('❌ 통신 에러: ' + err.message);
+                        } finally {
+                          setIsTestingEmail(false);
                         }
-                        
-                        const tFinal = new Date().toLocaleTimeString('ko-KR');
-                        setTestEmailLogs(prev => [...prev, `[${tFinal}] 🎉 총 ${targetRows.length}건 중 ${successCnt}건의 사고 리포트 이메일 즉시 발송 완료!`]);
-                        setIsTestingEmail(false);
                       }}
                     >
                       🚀 사고 리포트 이메일 즉시 전체 발송
