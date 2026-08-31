@@ -3858,7 +3858,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                   <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>종결 건수</span>
-                      <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ef4444' }}>{dashboardStats.totalCompCount || (dashboardStats.totalCount - dashboardStats.totalNoClaimCount)} 건</span>
+                      <span style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ef4444' }}>{dashboardStats.totalCompCount} 건</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>배상/회수액</span>
@@ -3899,7 +3899,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                   <div style={{ borderTop: '1px dashed var(--border)', paddingTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>진행 건수</span>
-                      <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#f59e0b' }}>{dashboardStats.totalCount - dashboardStats.totalNoClaimCount} 건</span>
+                      <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#f59e0b' }}>{dashboardStats.inProgressCount} 건</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>대상액 합계</span>
