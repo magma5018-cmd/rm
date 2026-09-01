@@ -807,17 +807,17 @@ export default function Home() {
   const [deferredListRender, setDeferredListRender] = useState(false); // 탭 전환 시 지연 렌더링 제어
 
   // 로딩 상태
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   // 사고 데이터
-  const [rows, setRows] = useState([]);
+  const [rows, setRows] = useState(INIT_ROWS);
   const [checkedRows, setCheckedRows] = useState(new Set());
   const [deleteMode, setDeleteMode] = useState(false);
   const [dirtyRows, setDirtyRows] = useState(new Set()); // 미저장 수정 행
   const [dataVersion, setDataVersion] = useState(0); // uncontrolled input 리셋용
 
   // 보험 데이터
-  const [insRows, setInsRows] = useState([]);
+  const [insRows, setInsRows] = useState(INIT_INS);
   const [checkedIns, setCheckedIns] = useState(new Set());
   const [insDeleteMode, setInsDeleteMode] = useState(false);
 
