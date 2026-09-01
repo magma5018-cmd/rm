@@ -1103,23 +1103,28 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
   }, [drillFilter]);
 
   // ── 데이터 로드 ──
+  // ── 데이터 로드 (구글 시트 실시간 연동) ──
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await fetch('/api/data');
         const data = await res.json();
-        if (data.rows) { setRows(data.rows); setDirtyRows(new Set()); setDataVersion(v => v + 1); }
-        if (data.insRows) setInsRows(data.insRows);
+        if (data.rows) { 
+          setRows(data.rows); 
+          setDirtyRows(new Set()); 
+          setDataVersion(v => v + 1); 
+        }
+        if (data.insRows) {
+          setInsRows(data.insRows);
+        }
       } catch (err) {
-        console.error('Failed to fetch data:', err);
-        alert('데이터를 불러오는 중 오류가 발생했습니다.');
+        console.error('Failed to fetch data from Sheets:', err);
       } finally {
         setIsLoading(false);
       }
     };
-    
+    fetchData();
   }, []);
-
   // ── 데이터 저장 ──
   const saveData = async (currentRows = rows, currentInsRows = insRows, showAlert = true) => {
     try {
