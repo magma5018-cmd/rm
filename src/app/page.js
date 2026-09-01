@@ -4370,7 +4370,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                   <div style={{ padding: '20px 24px', background: 'var(--primary)', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <span style={{ fontSize: '1.1rem' }}>
-                        {drillFilter.type === 'month' ? '📊' : drillFilter.type === 'dept' ? '🏢' : (drillFilter.value === 'all' ? '📊' : drillFilter.value === 'noClaim' ? '✅' : drillFilter.value === 'claimTarget' ? '🔄' : '🚨')}
+                        {drillFilter.type === 'month' ? '📊' : drillFilter.type === 'dept' ? '🏢' : (drillFilter.value === 'all' ? '📊' : drillFilter.value === 'noClaim' ? '🎉' : (drillFilter.value === 'claimPaid' || drillFilter.value === 'paid') ? '📑' : '🔄')}
                       </span>
                       <div>
                         <div style={{ fontWeight: 800, fontSize: '1rem' }}>
@@ -4381,10 +4381,10 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                               : (drillFilter.value === 'all' 
                                 ? '전체 사고 현황 상세' 
                                 : drillFilter.value === 'noClaim' 
-                                  ? '클레임 없음 (면책/무이의) 사고 상세' 
-                                  : drillFilter.value === 'claimTarget' 
-                                    ? '클레임 대상 (잔액) 사고 상세' 
-                                    : '배상 및 순 손실 사고 상세')}
+                                  ? '종결 (클레임없음) 사고 상세' 
+                                  : (drillFilter.value === 'claimPaid' || drillFilter.value === 'paid') 
+                                    ? '종결 (클레임처리) 사고 상세' 
+                                    : '진행중 사고 상세')}
                         </div>
                         <div style={{ fontSize: '0.8rem', opacity: 0.85 }}>총 {drillRows.length}건</div>
                       </div>
