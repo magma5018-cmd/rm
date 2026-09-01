@@ -107,7 +107,7 @@ export async function POST(req) {
       const subjectTitle = '[사고 리포트] ' + accTitle + ' (사고번호: ' + accNo + ')';
       const headerTitle = '🚨 [사고 관리 리포트] ' + accTitle + ' (사고번호: ' + accNo + ')';
 
-      const mailHtml = '<div style="font-family: sans-serif; padding: 24px; border: 1px solid #cbd5e1; border-radius: 12px; max-width: 700px; background: #ffffff; margin: 0 auto;">' +
+      const mailHtml = '<div style="font-family: sans-serif; padding: 24px; border: 1px solid #cbd5e1; border-radius: 12px; max-width: 700px; background: #ffffff; margin: 0;">' +
         '<div style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; padding: 20px 24px; border-radius: 10px; margin-bottom: 20px;">' +
           '<h2 style="margin:0; font-size: 1.25rem; font-weight: 800;">' + headerTitle + '</h2>' +
           '<p style="margin: 6px 0 0 0; font-size: 0.88rem; opacity: 0.95;">담당자 전용 사고 진행 및 AI 답장 자동 업데이트 리포트입니다.</p>' +
