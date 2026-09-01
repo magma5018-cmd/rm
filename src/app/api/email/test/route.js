@@ -66,8 +66,8 @@ export async function POST(req) {
       tls: { rejectUnauthorized: false }
     });
 
-    const subjectTitle = '[테스트 발송] ' + accTitle + ' (사고번호: ' + accNo + ')';
-    const headerTitle = '🚨 [테스트 발송 리포트] ' + accTitle + ' (사고번호: ' + accNo + ')';
+    const subjectTitle = '[현황확인요청 - 테스트] ' + accTitle + ' (사고번호: ' + accNo + ')';
+    const headerTitle = '🚨 ' + accTitle + ' (사고번호: ' + accNo + ')';
 
     const mailHtml = '<div style="font-family: sans-serif; padding: 24px; border: 1px solid #cbd5e1; border-radius: 12px; max-width: 700px; background: #ffffff; margin: 0;">' +
       '<div style="background: linear-gradient(135deg, #1e3a8a, #2563eb); color: white; padding: 20px 24px; border-radius: 10px; margin-bottom: 20px;">' +
