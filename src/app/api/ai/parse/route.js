@@ -16,7 +16,7 @@ export async function POST(request) {
 
     const genAI = new GoogleGenerativeAI(apiKey);
     // Gemini 2.5 Flash 모델 사용
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 
     const prompt = `
  너는 물류 사고/클레임 처리 전문가야.
