@@ -27,7 +27,7 @@ function sanitizeEmailBody(rawText) {
 
 // Gemini Vision 및 Text 분석 통합 함수
 async function summarizeWithGemini(cleanText, imageAttachments, apiKey) {
-  const geminiKey = apiKey || process.env.GEMINI_API_KEY || 'AIzaSyCkLM5Eldmw9x-zchYkwBawoAg18DiIoSc';
+  const geminiKey = apiKey || process.env.GEMINI_API_KEY || '';
 
   const parts = [];
   let promptText = '';
