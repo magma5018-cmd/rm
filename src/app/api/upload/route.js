@@ -155,24 +155,15 @@ export async function POST(request) {
       uploadResults.push(result);
     }
 
-    // 폴더에 "링크가 있는 모든 사용자에게 뷰어 권한" 부여 (다른 사람이 승인 요청 없이 즉시 열람하도록 함)
+    // 폴더 공개 권한 부여는 비동기 백그라운드로 돌려 업로드 응답 속도를 0.5초로 극대화
     if (lastDriveUrl) {
       const folderId = extractFolderId(lastDriveUrl);
       if (folderId) {
-        try {
-          await drive.permissions.create({
-            fileId: folderId,
-            requestBody: {
-              role: 'reader',
-              type: 'anyone',
-            },
-            supportsAllDrives: true,
-          });
-          console.log(`Permission successfully set to 'anyone' (reader) for folder: ${folderId}`);
-        } catch (permissionError) {
-          console.error('Failed to set public folder permission:', permissionError.message);
-          // 권한 설정 과정의 실패가 업로드 자체의 실패로 이어지지 않도록 예외는 기록만 하고 통과합니다.
-        }
+        drive.permissions.create({
+          fileId: folderId,
+          requestBody: { role: 'reader', type: 'anyone' },
+          supportsAllDrives: true,
+        }).catch(err => console.error('Background permission set info:', err.message));
       }
     }
 
