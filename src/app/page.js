@@ -1003,7 +1003,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
   // 목록 테이블 정렬
   const [sortConfig, setSortConfig] = useState({ key: null, dir: 'asc' });
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(15); // key: 컬럼명 | null
+  const [pageSize, setPageSize] = useState(0); // key: 컬럼명 | null
   const [insSortConfig, setInsSortConfig] = useState({ key: null, dir: 'asc' });
   const [drillSortConfig, setDrillSortConfig] = useState({ key: null, dir: 'asc' });
 
