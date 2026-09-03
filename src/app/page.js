@@ -3710,9 +3710,21 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       {sortConfig.key} {sortConfig.dir === 'asc' ? '▲' : '▼'} &nbsp;✕ 초기화
                     </button>
                   )}
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                    총 <strong style={{ color: 'var(--text)' }}>{filteredRows.length}</strong>건
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <select 
+                      value={pageSize} 
+                      onChange={e => setPageSize(Number(e.target.value))}
+                      style={{ fontSize: '0.78rem', padding: '5px 10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}
+                    >
+                      <option value={0}>📜 전체 ({filteredRows.length}건) 펼쳐보기</option>
+                      <option value={15}>📄 15건씩 잘라보기</option>
+                      <option value={30}>📄 30건씩 잘라보기</option>
+                      <option value={50}>📄 50건씩 잘라보기</option>
+                    </select>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                      총 <strong style={{ color: 'var(--text)' }}>{filteredRows.length}</strong>건
+                    </span>
+                  </div>
                 </div>
               </div>
 
