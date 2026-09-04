@@ -240,25 +240,39 @@ const causeDetailsMap = {
 
 
 function formatInsurancePremium(r) {
+  if (!r) return '-';
   const rawAmount = r.보험료금액 || r.보험료 || r['보험료'] || '';
-  if (!rawAmount) return '-';
+  if (!rawAmount && rawAmount !== 0) return '-';
   
-  const currency = (r.통화 || r['통화'] || '').trim().toUpperCase();
+  let currency = (r.currency || r.통화 || r['통화'] || '').trim().toUpperCase();
+  const branch = (r.구분 || '').trim();
+  
+  // 구글 시트에 통화 단어가 비어있을 경우 법인 구분(말련법인, 헝가리법인 등)으로 스마트 자동 부여
+  if (!currency) {
+    if (branch.includes('말련') || branch.includes('말레이')) currency = 'MYR';
+    else if (branch.includes('헝가리')) currency = 'HUF';
+    else if (branch.includes('베트남')) currency = 'VND';
+    else if (branch.includes('중국')) currency = 'CNY';
+    else if (branch.includes('미국') || branch.includes('해외')) currency = 'USD';
+    else currency = 'KRW';
+  }
+  
   const strVal = String(rawAmount).trim();
+  if (!strVal) return '-';
   
-  // 이미 외화 기호가 붙어 있는 경우 그대로 반환
+  // 이미 문자열 텍스트 자체에 영문 통화 코드(USD, MYR, HUF 등)나 통화 기호가 명시적으로 들어있는 경우 그대로 표시
   if (/[a-zA-Z$€¥]/.test(strVal)) return strVal;
   
   const numOnly = strVal.replace(/[^0-9.]/g, '');
   const formattedNum = numOnly ? Number(numOnly).toLocaleString() : strVal;
   
-  if (currency === 'USD' || currency === '$') return `$${formattedNum}`;
-  if (currency === 'EUR' || currency === '€') return `€${formattedNum}`;
-  if (currency === 'MYR') return `${formattedNum} MYR`;
-  if (currency === 'HUF') return `${formattedNum} HUF`;
-  if (currency && currency !== 'KRW' && currency !== '원') return `${formattedNum} ${currency}`;
+  if (currency === 'USD') return `$${formattedNum}`;
+  if (currency === 'EUR') return `€${formattedNum}`;
+  if (currency === 'JPY' || currency === 'CNY') return `¥${formattedNum}`;
+  if (currency === 'KRW') return `${formattedNum}원`;
   
-  return `${formattedNum}원`;
+  // MYR, HUF, VND 등 기타 해외 통화는 숫자에 통화 코드 표기 (예: 14,289 MYR, 1,122,602 HUF)
+  return `${formattedNum} ${currency}`;
 }
 
 export default function Home() {
@@ -4925,7 +4939,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                       </div>
                       <div style={{ display: 'flex', gap: '20px', fontSize: '0.78rem', color: 'var(--text-muted)', flexWrap: 'wrap', marginBottom: '8px' }}>
                         <span>📅 {r['보험 시작일']} ~ {r['보험 종료일']}</span>
-                        <span>💰 보험료: {r.보험료금액 ? `₩${Number(String(r.보험료금액).replace(/[^0-9]/g, '')).toLocaleString()}` : '-'}</span>
+                        <span>💰 보험료: {formatInsurancePremium(r)}</span>
                         {r.보상한도 && <span>🔒 {r.보상한도}</span>}
                         {r.driveUrl && <button onClick={() => window.open(r.driveUrl, '_blank')} style={{ background: 'none', border: '1px solid var(--primary)', color: 'var(--primary)', borderRadius: '6px', padding: '2px 10px', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600 }}>📄 증권보기</button>}
                       </div>
@@ -6137,4 +6151,4 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
 
     </div>
   );
-}
+}
