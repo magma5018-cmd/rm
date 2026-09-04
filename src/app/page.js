@@ -5169,8 +5169,8 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                               <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', lineHeight: '1.2' }}>{r.회수액 ? `${r.회수액}원` : '0원'}</td>
                               <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', fontWeight: 600, color: '#ef4444', whiteSpace: 'nowrap', lineHeight: '1.2' }}>{r.손실액 ? `${r.손실액}원` : '0원'}</td>
                               <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word', lineHeight: '1.2' }}>{r.완료방법 || '-'}</td>
-                              <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'middle', wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>
-                                {lastProgress ? <strong>[{lastProgress.date}] {lastProgress.text}</strong> : '기록된 진행 경과 없음'}
+                              <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'top', wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                                {lastProgress ? <><strong style={{ color: '#2563eb', display: 'inline-block', marginBottom: '4px' }}>[{lastProgress.date}]</strong>{'\n'}{lastProgress.text}</> : '기록된 진행 경과 없음'}
                               </td>
                             </tr>
                           );
@@ -5208,8 +5208,8 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                               <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word', lineHeight: '1.2' }}>{r.실화주 || r.고객사 || '-'}</td>
                               <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word', lineHeight: '1.2' }}>{r.부서 || r.사업부 || '-'} / {r.담당자 || '-'}</td>
                               <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', fontWeight: 600, whiteSpace: 'nowrap', lineHeight: '1.2' }}>{r.사고액 ? `${r.사고액}원` : '0원'}</td>
-                              <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'middle', wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: '1.4', whiteSpace: 'pre-wrap' }}>
-                                {lastProgress ? <strong>[{lastProgress.date}] {lastProgress.text}</strong> : '기록된 진행 경과 없음'}
+                              <td style={{ padding: '8px 10px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'top', wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
+                                {lastProgress ? <><strong style={{ color: '#2563eb', display: 'inline-block', marginBottom: '4px' }}>[{lastProgress.date}]</strong>{'\n'}{lastProgress.text}</> : '기록된 진행 경과 없음'}
                               </td>
                             </tr>
                           );
