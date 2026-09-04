@@ -238,6 +238,29 @@ const causeDetailsMap = {
   '환경요인': ['우천 침수', '해수 침투', '결로 현상', '기타 환경요인']
 };
 
+
+function formatInsurancePremium(r) {
+  const rawAmount = r.보험료금액 || r.보험료 || r['보험료'] || '';
+  if (!rawAmount) return '-';
+  
+  const currency = (r.통화 || r['통화'] || '').trim().toUpperCase();
+  const strVal = String(rawAmount).trim();
+  
+  // 이미 외화 기호가 붙어 있는 경우 그대로 반환
+  if (/[a-zA-Z$€¥]/.test(strVal)) return strVal;
+  
+  const numOnly = strVal.replace(/[^0-9.]/g, '');
+  const formattedNum = numOnly ? Number(numOnly).toLocaleString() : strVal;
+  
+  if (currency === 'USD' || currency === '$') return `$${formattedNum}`;
+  if (currency === 'EUR' || currency === '€') return `€${formattedNum}`;
+  if (currency === 'MYR') return `${formattedNum} MYR`;
+  if (currency === 'HUF') return `${formattedNum} HUF`;
+  if (currency && currency !== 'KRW' && currency !== '원') return `${formattedNum} ${currency}`;
+  
+  return `${formattedNum}원`;
+}
+
 export default function Home() {
   const [isPending, startTransition] = useTransition();
   const [activeSmtpEngine, setActiveSmtpEngine] = useState('gmail');
@@ -929,7 +952,7 @@ ${majorAccidents.map(r => {
 ${expiringInsurances.map(r => {
   const diffDays = Math.ceil((new Date(r['보험 종료일']) - new Date()) / (1000 * 60 * 60 * 24));
   const dDayStr = diffDays < 0 ? `만기경과 (D+${Math.abs(diffDays)})` : `D-${diffDays}`;
-  return `- [${r.구분 || '본사'}] ${r.보험명} (${r.보험사}) | 보험료: ₩${r.보험료금액 || '-'} | 기간: ${r['보험 시작일']}~${r['보험 종료일']} (${dDayStr})\n  * 보상내용: ${r.보상내용 || '-'}`;
+  return `- [${r.구분 || '본사'}] ${r.보험명} (${r.보험사}) | 보험료: ${formatInsurancePremium(r)} | 기간: ${r['보험 시작일']}~${r['보험 종료일']} (${dDayStr})\n  * 보상내용: ${r.보상내용 || '-'}`;
 }).join('\n') || '- 대상 보험 없음'}`;
 
     navigator.clipboard.writeText(reportText)
@@ -5256,7 +5279,7 @@ ${expiringInsurances.map(r => `- ${r.보험명} (만기일: ${r['보험 종료�
                               <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word', fontWeight: 600, lineHeight: '1.2' }}>{r.구분 || '본사'}</td>
                               <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'left', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word', lineHeight: '1.2' }}>{r.보험명 || '-'}</td>
                               <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word', lineHeight: '1.2' }}>{r.보험사 || '-'}</td>
-                              <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', lineHeight: '1.2' }}>{r.보험료금액 ? `${Number(String(r.보험료금액).replace(/[^0-9]/g, '')).toLocaleString()}원` : '-'}</td>
+                              <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'right', verticalAlign: 'middle', whiteSpace: 'nowrap', lineHeight: '1.2', fontWeight: 600 }}>{formatInsurancePremium(r)}</td>
                               <td style={{ padding: '6px 8px', border: '1px solid #cbd5e1', textAlign: 'center', verticalAlign: 'middle', wordBreak: 'keep-all', overflowWrap: 'break-word', lineHeight: '1.2' }}>
                                 {r['보험 시작일']} ~ {r['보험 종료일']} <strong>({dDayStr})</strong>
                               </td>
